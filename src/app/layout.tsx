@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Rajdhani, Inter } from "next/font/google";
 import "./globals.css";
+import { Navegacao } from "@/components/Navegacao";
 
 const rajdhani = Rajdhani({
   subsets: ["latin"],
@@ -25,7 +26,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${rajdhani.variable} ${inter.variable}`}>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        <Navegacao />
+        <div className="md:pl-56 pb-20 md:pb-0">{children}</div>
+      </body>
     </html>
   );
 }
