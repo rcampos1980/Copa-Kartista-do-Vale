@@ -191,7 +191,7 @@ export async function getEtapaDetalhe(etapaId: string) {
 
   const { data: etapa } = await supabase
     .from("etapas")
-    .select("*")
+    .select("*, campeonatos(nome, ano)")
     .eq("id", etapaId)
     .maybeSingle()
 
@@ -203,5 +203,20 @@ export async function getEtapaDetalhe(etapaId: string) {
     .eq("etapa_id", etapaId)
     .order("posicao_chegada", { ascending: true })
 
-  return { etapa, resultados: resultados ?? [] }
+  const { data: lastro } = await supabase
+    .rpc("relatorio_lastro_etapa", { etapa_uuid: etapaId })
+
+  return { etapa, resultados: resultados ?? [], lastro: lastro ?? [] }
+}
+
+export async function getLastro(campeonatoId: string) {
+  const supabase = createClient()
+
+  const { data } = await supabase
+    .from('vw_lastro')
+    .select('*')
+    .eq('campeonato_id', campeonatoId)
+    .order('lastro', { ascending: false })
+
+  return data ?? []
 }

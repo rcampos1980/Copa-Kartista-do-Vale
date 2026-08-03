@@ -7,3 +7,34 @@ body {
   background-color: #0b0e14;
   color: #f4f5f7;
 }
+
+/* Impressão: mostra só a área de lastro, esconde o resto */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  aside,
+  nav,
+  .print\:hidden {
+    display: none !important;
+  }
+  .area-impressao,
+  .area-impressao * {
+    visibility: visible;
+  }
+  .area-impressao {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    color: black !important;
+  }
+  .area-impressao .bg-surface {
+    background: white !important;
+    border-color: #ccc !important;
+  }
+  .area-impressao * {
+    color: black !important;
+  }
+}
