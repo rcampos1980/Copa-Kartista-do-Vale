@@ -1,9 +1,13 @@
 import { getDashboardData } from '@/lib/supabase/queries'
+import { getTemporadas, getAnoSelecionado } from '@/lib/temporada'
+import { SeletorTemporada } from '@/components/SeletorTemporada'
 import { formatarData, pluralizar } from '@/lib/format'
 import { Trophy, Flag, Calendar, Users, Medal } from 'lucide-react'
 
 export default async function Home() {
-  const dashboard = await getDashboardData()
+  const temporadas = await getTemporadas()
+  const anoSelecionado = await getAnoSelecionado()
+  const dashboard = await getDashboardData(anoSelecionado ?? undefined)
 
   if (!dashboard) {
     return (
@@ -28,10 +32,8 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-bg text-white px-4 py-8 md:px-10 md:py-12">
       <header className="mb-8">
-        <p className="text-sm uppercase tracking-widest text-white/50 font-display">
-          Temporada {campeonato.ano}
-        </p>
-        <h1 className="text-3xl md:text-4xl font-display font-bold">
+        <SeletorTemporada temporadas={temporadas} anoAtual={campeonato.ano} />
+        <h1 className="text-3xl md:text-4xl font-display font-bold mt-1">
           {campeonato.nome}
         </h1>
       </header>

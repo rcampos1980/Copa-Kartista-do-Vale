@@ -1,19 +1,32 @@
 import { createClient } from './client'
 
-const ANO_ATUAL = 2026
-
-export async function getDashboardData() {
-  const supabase = createClient()
-
-  const { data: campeonato } = await supabase
+// Resolve o campeonato: se 'ano' vier, filtra por ele; senao, pega o mais recente
+async function resolverCampeonato(
+  supabase: ReturnType<typeof createClient>,
+  ano?: number
+) {
+  if (ano != null) {
+    const { data } = await supabase
+      .from('campeonatos')
+      .select('id, ano, nome')
+      .eq('ano', ano)
+      .maybeSingle()
+    return data
+  }
+  const { data } = await supabase
     .from('campeonatos')
     .select('id, ano, nome')
-    .eq('ano', ANO_ATUAL)
-    .single()
+    .order('ano', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return data
+}
 
-  if (!campeonato) {
-    return null
-  }
+export async function getDashboardData(ano?: number) {
+  const supabase = createClient()
+
+  const campeonato = await resolverCampeonato(supabase, ano)
+  if (!campeonato) return null
 
   const [
     { data: classificacao },
@@ -64,15 +77,10 @@ export async function getDashboardData() {
   }
 }
 
-export async function getClassificacao() {
+export async function getClassificacao(ano?: number) {
   const supabase = createClient()
 
-  const { data: campeonato } = await supabase
-    .from('campeonatos')
-    .select('id, ano, nome')
-    .eq('ano', ANO_ATUAL)
-    .single()
-
+  const campeonato = await resolverCampeonato(supabase, ano)
   if (!campeonato) return null
 
   const { data: classificacao } = await supabase
@@ -80,26 +88,19 @@ export async function getClassificacao() {
     .select('*')
     .eq('campeonato_id', campeonato.id)
     .order('pontos_totais', { ascending: false })
+    .order('nome', { ascending: true })
 
-  return {
-    campeonato,
-    classificacao: classificacao ?? [],
-  }
+  return { campeonato, classificacao: classificacao ?? [] }
 }
 
-export async function getPilotos() {
+export async function getPilotos(ano?: number) {
   const supabase = createClient()
 
-  const { data: campeonato } = await supabase
-    .from('campeonatos')
-    .select('id, ano')
-    .eq('ano', ANO_ATUAL)
-    .single()
+  const campeonato = await resolverCampeonato(supabase, ano)
 
   const { data: pilotos } = await supabase
     .from('vw_pilotos_publico')
     .select('*')
-    .eq('ativo', true)
     .order('nome', { ascending: true })
 
   let participacoes: { piloto_id: string; tipo: string }[] = []
@@ -119,14 +120,10 @@ export async function getPilotos() {
   }))
 }
 
-export async function getPilotoPerfil(pilotoId: string) {
+export async function getPilotoPerfil(pilotoId: string, ano?: number) {
   const supabase = createClient()
 
-  const { data: campeonato } = await supabase
-    .from('campeonatos')
-    .select('id, ano')
-    .eq('ano', ANO_ATUAL)
-    .single()
+  const campeonato = await resolverCampeonato(supabase, ano)
 
   const { data: piloto } = await supabase
     .from('vw_pilotos_publico')
@@ -166,15 +163,10 @@ export async function getPilotoPerfil(pilotoId: string) {
   }
 }
 
-export async function getEtapas() {
+export async function getEtapas(ano?: number) {
   const supabase = createClient()
 
-  const { data: campeonato } = await supabase
-    .from('campeonatos')
-    .select('id, ano')
-    .eq('ano', ANO_ATUAL)
-    .single()
-
+  const campeonato = await resolverCampeonato(supabase, ano)
   if (!campeonato) return { campeonato: null, etapas: [] }
 
   const { data: etapas } = await supabase
@@ -219,4 +211,68 @@ export async function getLastro(campeonatoId: string) {
     .order('lastro', { ascending: false })
 
   return data ?? []
+}
+
+export async function getDadosLancamento(etapaId: string) {
+  const supabase = createClient()
+
+  const { data: etapa } = await supabase
+    .from('etapas')
+    .select('*, campeonatos(nome, ano)')
+    .eq('id', etapaId)
+    .maybeSingle()
+
+  if (!etapa) return null
+
+  // tipo (fixo/convidado) por piloto, no campeonato
+  const { data: participacoes } = await supabase
+    .from('participacoes')
+    .select('piloto_id, tipo')
+    .eq('campeonato_id', etapa.campeonato_id)
+
+  const tipoPorPiloto = new Map(
+    (participacoes ?? []).map((p) => [p.piloto_id, p.tipo])
+  )
+
+  // Quem foi associado no botao "Pilotos" — fonte de verdade de quem corre
+  const { data: assoc } = await supabase
+    .from('etapa_pilotos')
+    .select('piloto_id')
+    .eq('etapa_id', etapaId)
+
+  const idsAssociados = (assoc ?? []).map((r) => r.piloto_id)
+  const associadosSet = new Set(idsAssociados)
+
+  // TODOS os pilotos (sem filtro de ativo), para nao perder quem
+  // ficou inativo DEPOIS de ja ter sido associado a uma corrida passada
+  const { data: pilotosPub } = await supabase
+    .from('vw_pilotos_publico')
+    .select('id, nome, numero_kart, ativo')
+    .order('nome', { ascending: true })
+
+  const todos = (pilotosPub ?? []).map((p) => ({
+    id: p.id,
+    nome: p.nome,
+    numero_kart: p.numero_kart,
+    ativo: p.ativo,
+    tipo: tipoPorPiloto.get(p.id) ?? null,
+  }))
+
+  // Lista da etapa = apenas os associados (mesmo inativos), em ordem alfabetica
+  const listaPilotos = todos
+    .filter((p) => associadosSet.has(p.id))
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }))
+
+  const { data: resultados } = await supabase
+    .from('resultados')
+    .select('piloto_id, posicao_chegada, is_convidado, peso_convidado, melhor_volta_flag')
+    .eq('etapa_id', etapaId)
+
+  return {
+    etapa,
+    listaPilotos,
+    idsAssociados,
+    todosPilotos: todos,
+    resultados: resultados ?? [],
+  }
 }

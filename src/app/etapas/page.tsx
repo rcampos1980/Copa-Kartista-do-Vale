@@ -1,4 +1,5 @@
 import { getEtapas } from '@/lib/supabase/queries'
+import { getAnoSelecionado } from '@/lib/temporada'
 import { formatarData } from '@/lib/format'
 import Link from 'next/link'
 import { Flag, Calendar, ChevronRight } from 'lucide-react'
@@ -10,13 +11,14 @@ const statusLabel: Record<string, { texto: string; cor: string }> = {
 }
 
 export default async function EtapasPage() {
-  const { etapas } = await getEtapas()
+  const anoSelecionado = await getAnoSelecionado()
+  const { campeonato, etapas } = await getEtapas(anoSelecionado ?? undefined)
 
   return (
     <main className="min-h-screen px-4 py-8 md:px-10 md:py-12">
       <header className="mb-8">
         <p className="text-sm uppercase tracking-widest text-white/50 font-display">
-          Temporada 2026
+          Temporada {campeonato?.ano ?? ''}
         </p>
         <h1 className="text-3xl md:text-4xl font-display font-bold text-white">
           Etapas
