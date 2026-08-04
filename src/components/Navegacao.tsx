@@ -12,6 +12,7 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  LogIn,
 } from 'lucide-react'
 
 const itens = [
@@ -78,17 +79,27 @@ export function Navegacao({ isAdmin }: { isAdmin: boolean }) {
           )}
         </nav>
 
-        {isAdmin && (
-          <form action={sair} className="border-t border-border pt-3">
-            <button
-              type="submit"
-              className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white transition-colors"
+        <div className="border-t border-border pt-3">
+          {isAdmin ? (
+            <form action={sair}>
+              <button
+                type="submit"
+                className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white transition-colors"
+              >
+                <LogOut size={19} />
+                Sair
+              </button>
+            </form>
+          ) : (
+            <Link
+              href="/login"
+              className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/35 hover:bg-white/5 hover:text-white/70 transition-colors"
             >
-              <LogOut size={19} />
-              Sair
-            </button>
-          </form>
-        )}
+              <LogIn size={19} />
+              Entrar
+            </Link>
+          )}
+        </div>
       </aside>
 
       {/* Bottom nav — mobile */}
