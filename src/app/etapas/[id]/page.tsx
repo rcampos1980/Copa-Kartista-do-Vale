@@ -1,9 +1,24 @@
 import { getEtapaDetalhe } from '@/lib/supabase/queries'
+import { createClient } from '@/lib/supabase/server'
 import { formatarData } from '@/lib/format'
 import { BotaoImprimir } from './BotaoImprimir'
-import { ArrowLeft, Calendar, MapPin, Weight } from 'lucide-react'
+import { ArrowLeft, Calendar, MapPin, Weight, Play, Camera } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+
+type Midia = {
+  id: string
+  tipo: string
+  url: string
+  titulo: string | null
+}
+
+function idYoutube(url: string): string | null {
+  const m = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/
+  )
+  return m ? m[1] : null
+}
 
 export default async function EtapaDetalhePage({
   params,
@@ -16,6 +31,17 @@ export default async function EtapaDetalhePage({
   if (!dados) notFound()
 
   const { etapa, resultados, lastro } = dados
+
+  const supabase = await createClient()
+  const { data: midiaBruta } = await supabase
+    .from('midia_etapa')
+    .select('id, tipo, url, titulo')
+    .eq('etapa_id', id)
+    .order('created_at', { ascending: false })
+
+  const midia: Midia[] = midiaBruta ?? []
+  const videos = midia.filter((m) => m.tipo === 'video')
+  const fotos = midia.filter((m) => m.tipo === 'foto')
 
   const corPosicao = (pos: number) => {
     if (pos === 1) return 'text-gold'
@@ -102,6 +128,69 @@ export default async function EtapaDetalhePage({
         )}
       </div>
 
+      {videos.length > 0 && (
+        <div className="print:hidden mb-10">
+          <h2 className="font-display uppercase text-sm tracking-wide text-white/50 mb-3">
+            Vídeos
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {videos.map((v) => {
+              const yt = idYoutube(v.url)
+              return (
+                <a
+                  key={v.id}
+                  href={v.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group overflow-hidden rounded-2xl border border-border bg-surface transition-colors hover:border-accent/50"
+                >
+                  <div className="relative aspect-video bg-bg">
+                    {yt ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={`https://img.youtube.com/vi/${yt}/hqdefault.jpg`}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : null}
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/35 transition-colors group-hover:bg-black/20">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent">
+                        <Play className="text-white ml-0.5" size={20} fill="currentColor" />
+                      </span>
+                    </span>
+                  </div>
+                  <p className="px-3 py-2.5 text-sm text-white truncate">
+                    {v.titulo ?? 'Assistir vídeo'}
+                  </p>
+                </a>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {fotos.length > 0 && (
+        <div className="print:hidden mb-10">
+          <h2 className="font-display uppercase text-sm tracking-wide text-white/50 mb-3 flex items-center gap-2">
+            <Camera size={15} /> Fotos ({fotos.length})
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {fotos.map((f) => (
+              <a
+                key={f.id}
+                href={f.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative aspect-square overflow-hidden rounded-xl border border-border bg-surface transition-transform hover:scale-[1.02]"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={f.url} alt="" loading="lazy" className="h-full w-full object-cover" />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="area-impressao">
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-2">
@@ -176,3 +265,5 @@ export default async function EtapaDetalhePage({
     </main>
   )
 }
+
+export const dynamic = 'force-dynamic'

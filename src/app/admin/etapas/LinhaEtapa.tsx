@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Flag, ClipboardList, Users, Pencil } from 'lucide-react'
+import { Flag, ClipboardList, Users, Pencil, Images } from 'lucide-react'
 
 type Etapa = {
   id: string
@@ -64,6 +64,10 @@ export function LinhaEtapa({
 
       <Link href={`/admin/resultados/${etapa.id}`} className={botao} title="Lançar resultado">
         <ClipboardList size={16} />
+      </Link>
+
+      <Link href={`/admin/etapas/${etapa.id}/midia`} className={botao} title="Fotos e vídeos">
+        <Images size={16} />
       </Link>
     </div>
   )
