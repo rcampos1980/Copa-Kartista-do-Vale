@@ -10,6 +10,8 @@ export async function salvarPiloto(formData: FormData) {
 
   const id = (formData.get('id') as string | null) || null
   const ativo = formData.get('ativo') === 'true'
+  const isAdmin = formData.get('is_admin') === 'true'
+  const email = ((formData.get('email') as string) ?? '').trim().toLowerCase() || null
 
   const dados = {
     nome: formData.get('nome') as string,
@@ -20,6 +22,8 @@ export async function salvarPiloto(formData: FormData) {
     categoria: (formData.get('categoria') as string) || null,
     estilo_pilotagem: (formData.get('estilo_pilotagem') as string) || null,
     caracteristicas: (formData.get('caracteristicas') as string) || null,
+    email,
+    is_admin: isAdmin,
     ativo,
   }
 
@@ -51,14 +55,16 @@ export async function salvarPiloto(formData: FormData) {
 
   if (id) {
     const patch = fotoUrl ? { ...dados, foto_url: fotoUrl } : dados
-    await supabase.from('pilotos').update(patch).eq('id', id)
+    const { error } = await supabase.from('pilotos').update(patch).eq('id', id)
+    if (error) throw new Error(`Falha ao salvar piloto: ${error.message}`)
   } else {
     const insert = fotoUrl ? { ...dados, foto_url: fotoUrl } : dados
-    const { data: novo } = await supabase
+    const { data: novo, error } = await supabase
       .from('pilotos')
       .insert(insert)
       .select('id')
       .maybeSingle()
+    if (error) throw new Error(`Falha ao cadastrar piloto: ${error.message}`)
     pilotoId = novo?.id ?? null
   }
 
@@ -71,12 +77,25 @@ export async function salvarPiloto(formData: FormData) {
       .maybeSingle()
 
     if (existente) {
-      await supabase.from('participacoes').update({ tipo, peso }).eq('id', existente.id)
+      const { error } = await supabase
+        .from('participacoes')
+        .update({ tipo, peso })
+        .eq('id', existente.id)
+      if (error) throw new Error(`Falha ao salvar peso e tipo: ${error.message}`)
     } else {
-      await supabase
+      const { error } = await supabase
         .from('participacoes')
         .insert({ piloto_id: pilotoId, campeonato_id: campeonato.id, tipo, peso })
+      if (error) throw new Error(`Falha ao criar participacao: ${error.message}`)
     }
+  }
+
+  // Se a pessoa ja tem conta, sincroniza o papel dela com o marcador do cadastro
+  if (email && pilotoId) {
+    await supabase
+      .from('usuarios')
+      .update({ role: isAdmin ? 'admin' : 'piloto', piloto_id: pilotoId })
+      .eq('email', email)
   }
 
   revalidatePath('/', 'layout')
@@ -84,6 +103,7 @@ export async function salvarPiloto(formData: FormData) {
 
 export async function alternarAtivo(id: string, ativo: boolean) {
   const supabase = await createClient()
-  await supabase.from('pilotos').update({ ativo: !ativo }).eq('id', id)
+  const { error } = await supabase.from('pilotos').update({ ativo: !ativo }).eq('id', id)
+  if (error) throw new Error(`Falha ao alterar status: ${error.message}`)
   revalidatePath('/', 'layout')
 }
