@@ -17,11 +17,15 @@ type Piloto = {
   ativo: boolean
   peso?: number | null
   tipo?: string | null
+  email?: string | null
+  is_admin?: boolean
 }
+
+type Resultado = { ok: boolean; mensagem: string }
 
 type Props = {
   pilotos: Piloto[]
-  salvarPiloto: (formData: FormData) => Promise<void>
+  salvarPiloto: (formData: FormData) => Promise<Resultado>
   alternarAtivo: (id: string, ativo: boolean) => Promise<void>
 }
 
@@ -44,10 +48,7 @@ export function GestaoPilotos({ pilotos, salvarPiloto, alternarAtivo }: Props) {
             {editando ? `Editando: ${editando.nome}` : 'Novo piloto'}
           </h2>
           {editando && (
-            <button
-              onClick={() => setEditando(null)}
-              className="text-white/50 hover:text-white text-xs"
-            >
+            <button onClick={() => setEditando(null)} className="text-white/50 hover:text-white text-xs">
               Cancelar edição
             </button>
           )}
@@ -65,16 +66,9 @@ export function GestaoPilotos({ pilotos, salvarPiloto, alternarAtivo }: Props) {
         </h2>
         <div className="flex flex-col gap-2">
           {pilotos.map((p) => (
-            <LinhaPiloto
-              key={p.id}
-              piloto={p}
-              alternarAtivo={alternarAtivo}
-              onEditar={editar}
-            />
+            <LinhaPiloto key={p.id} piloto={p} alternarAtivo={alternarAtivo} onEditar={editar} />
           ))}
-          {pilotos.length === 0 && (
-            <p className="text-white/40 text-sm">Nenhum piloto ainda.</p>
-          )}
+          {pilotos.length === 0 && <p className="text-white/40 text-sm">Nenhum piloto ainda.</p>}
         </div>
       </section>
     </div>

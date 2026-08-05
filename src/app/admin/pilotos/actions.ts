@@ -1,9 +1,20 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 
 const ANO_ATUAL = 2026
+
+async function enderecoDoSite(): Promise<string> {
+  const h = await headers()
+  const origem = h.get('origin')
+  if (origem) return origem
+  const host = h.get('host') ?? 'localhost:3000'
+  const protocolo = host.startsWith('localhost') ? 'http' : 'https'
+  return `${protocolo}://${host}`
+}
 
 export async function salvarPiloto(formData: FormData) {
   const supabase = await createClient()
@@ -30,7 +41,13 @@ export async function salvarPiloto(formData: FormData) {
   const tipo = (formData.get('tipo') as string) || null
   const peso = formData.get('peso') ? Number(formData.get('peso')) : null
 
-  if (!tipo || peso == null) return
+  if (!tipo || peso == null) {
+    return { ok: false, mensagem: 'Preencha o peso e o tipo antes de salvar.' }
+  }
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { ok: false, mensagem: 'O e-mail informado não parece válido.' }
+  }
 
   const foto = formData.get('foto') as File | null
   let fotoUrl: string | null = null
@@ -56,7 +73,7 @@ export async function salvarPiloto(formData: FormData) {
   if (id) {
     const patch = fotoUrl ? { ...dados, foto_url: fotoUrl } : dados
     const { error } = await supabase.from('pilotos').update(patch).eq('id', id)
-    if (error) throw new Error(`Falha ao salvar piloto: ${error.message}`)
+    if (error) return { ok: false, mensagem: `Falha ao salvar piloto: ${error.message}` }
   } else {
     const insert = fotoUrl ? { ...dados, foto_url: fotoUrl } : dados
     const { data: novo, error } = await supabase
@@ -64,7 +81,7 @@ export async function salvarPiloto(formData: FormData) {
       .insert(insert)
       .select('id')
       .maybeSingle()
-    if (error) throw new Error(`Falha ao cadastrar piloto: ${error.message}`)
+    if (error) return { ok: false, mensagem: `Falha ao cadastrar piloto: ${error.message}` }
     pilotoId = novo?.id ?? null
   }
 
@@ -81,24 +98,52 @@ export async function salvarPiloto(formData: FormData) {
         .from('participacoes')
         .update({ tipo, peso })
         .eq('id', existente.id)
-      if (error) throw new Error(`Falha ao salvar peso e tipo: ${error.message}`)
+      if (error) return { ok: false, mensagem: `Falha ao salvar peso e tipo: ${error.message}` }
     } else {
       const { error } = await supabase
         .from('participacoes')
         .insert({ piloto_id: pilotoId, campeonato_id: campeonato.id, tipo, peso })
-      if (error) throw new Error(`Falha ao criar participacao: ${error.message}`)
+      if (error) return { ok: false, mensagem: `Falha ao criar participacao: ${error.message}` }
     }
   }
 
-  // Se a pessoa ja tem conta, sincroniza o papel dela com o marcador do cadastro
+  const papel = isAdmin ? 'administrador' : 'piloto'
+  let recado = 'Piloto salvo.'
+
   if (email && pilotoId) {
-    await supabase
+    const admin = createAdminClient()
+
+    const { data: jaTemConta } = await admin
       .from('usuarios')
-      .update({ role: isAdmin ? 'admin' : 'piloto', piloto_id: pilotoId })
+      .select('id')
       .eq('email', email)
+      .maybeSingle()
+
+    if (jaTemConta) {
+      const { error } = await admin
+        .from('usuarios')
+        .update({ role: isAdmin ? 'admin' : 'piloto', piloto_id: pilotoId })
+        .eq('email', email)
+
+      recado = error
+        ? `Piloto salvo, mas não consegui atualizar o acesso: ${error.message}`
+        : `Piloto salvo. ${email} já tinha conta — acesso atualizado para ${papel}.`
+    } else {
+      const destino = `${await enderecoDoSite()}/definir-senha`
+      const convite = await admin.auth.admin.inviteUserByEmail(email, {
+        redirectTo: destino,
+      })
+
+      if (convite.error) {
+        recado = `Piloto salvo, mas o convite não saiu: ${convite.error.message}`
+      } else {
+        recado = `Piloto salvo. Convite enviado para ${email} — a pessoa recebe um e-mail para criar a senha e entra como ${papel}.`
+      }
+    }
   }
 
   revalidatePath('/', 'layout')
+  return { ok: true, mensagem: recado }
 }
 
 export async function alternarAtivo(id: string, ativo: boolean) {

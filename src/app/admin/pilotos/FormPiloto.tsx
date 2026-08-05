@@ -22,7 +22,7 @@ type PilotoEditando = {
 } | null
 
 type Props = {
-  salvarPiloto: (formData: FormData) => Promise<void>
+  salvarPiloto: (formData: FormData) => Promise<{ ok: boolean; mensagem: string }>
   pilotoEditando?: PilotoEditando
   onSalvo?: () => void
 }
@@ -34,6 +34,7 @@ export function FormPiloto({ salvarPiloto, pilotoEditando, onSalvo }: Props) {
   const [preview, setPreview] = useState<string | null>(null)
   const [ativo, setAtivo] = useState(true)
   const [ehAdmin, setEhAdmin] = useState(false)
+  const [aviso, setAviso] = useState<{ ok: boolean; mensagem: string } | null>(null)
 
   useEffect(() => {
     if (pilotoEditando && formRef.current) {
@@ -76,9 +77,12 @@ export function FormPiloto({ salvarPiloto, pilotoEditando, onSalvo }: Props) {
 
   async function acao(formData: FormData) {
     setSalvando(true)
+    setAviso(null)
     if (pilotoEditando) formData.set('id', pilotoEditando.id)
-    await salvarPiloto(formData)
+    const resultado = await salvarPiloto(formData)
     setSalvando(false)
+    setAviso(resultado)
+    if (!resultado.ok) return
     formRef.current?.reset()
     setFotoAtual(null)
     setPreview(null)
@@ -225,6 +229,12 @@ export function FormPiloto({ salvarPiloto, pilotoEditando, onSalvo }: Props) {
         <label className={label}>Características / observações</label>
         <textarea name="caracteristicas" rows={2} className={input} placeholder="Notas sobre o piloto" />
       </div>
+
+      {aviso && (
+        <p className={`rounded-xl border px-3 py-2.5 text-sm ${aviso.ok ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' : 'border-red-500/40 bg-red-500/10 text-red-300'}`}>
+          {aviso.mensagem}
+        </p>
+      )}
 
       <button
         type="submit"
