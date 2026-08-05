@@ -19,6 +19,7 @@ type Piloto = {
   tipo?: string | null
   email?: string | null
   is_admin?: boolean
+  foto_url?: string | null
 }
 
 type Resultado = { ok: boolean; mensagem: string }
@@ -27,9 +28,15 @@ type Props = {
   pilotos: Piloto[]
   salvarPiloto: (formData: FormData) => Promise<Resultado>
   alternarAtivo: (id: string, ativo: boolean) => Promise<void>
+  reenviarAcesso: (pilotoId: string) => Promise<Resultado>
 }
 
-export function GestaoPilotos({ pilotos, salvarPiloto, alternarAtivo }: Props) {
+export function GestaoPilotos({
+  pilotos,
+  salvarPiloto,
+  alternarAtivo,
+  reenviarAcesso,
+}: Props) {
   const [editando, setEditando] = useState<Piloto | null>(null)
 
   function editar(id: string) {
@@ -66,7 +73,13 @@ export function GestaoPilotos({ pilotos, salvarPiloto, alternarAtivo }: Props) {
         </h2>
         <div className="flex flex-col gap-2">
           {pilotos.map((p) => (
-            <LinhaPiloto key={p.id} piloto={p} alternarAtivo={alternarAtivo} onEditar={editar} />
+            <LinhaPiloto
+              key={p.id}
+              piloto={p}
+              alternarAtivo={alternarAtivo}
+              onEditar={editar}
+              reenviarAcesso={reenviarAcesso}
+            />
           ))}
           {pilotos.length === 0 && <p className="text-white/40 text-sm">Nenhum piloto ainda.</p>}
         </div>

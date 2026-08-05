@@ -8,9 +8,13 @@ import { headers } from 'next/headers'
 const ANO_ATUAL = 2026
 
 async function enderecoDoSite(): Promise<string> {
+  const fixo = process.env.NEXT_PUBLIC_SITE_URL
+  if (fixo) return fixo.replace(/\/+$/, '')
+
   const h = await headers()
   const origem = h.get('origin')
   if (origem) return origem
+
   const host = h.get('host') ?? 'localhost:3000'
   const protocolo = host.startsWith('localhost') ? 'http' : 'https'
   return `${protocolo}://${host}`
@@ -46,7 +50,7 @@ export async function salvarPiloto(formData: FormData) {
   }
 
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { ok: false, mensagem: 'O e-mail informado não parece válido.' }
+    return { ok: false, mensagem: 'O e-mail informado nao parece valido.' }
   }
 
   const foto = formData.get('foto') as File | null
@@ -126,18 +130,20 @@ export async function salvarPiloto(formData: FormData) {
         .eq('email', email)
 
       recado = error
-        ? `Piloto salvo, mas não consegui atualizar o acesso: ${error.message}`
-        : `Piloto salvo. ${email} já tinha conta — acesso atualizado para ${papel}.`
+        ? `Piloto salvo, mas nao consegui atualizar o acesso: ${error.message}`
+        : `Piloto salvo. ${email} ja tinha conta — acesso atualizado para ${papel}.`
     } else {
-      const destino = `${await enderecoDoSite()}/definir-senha`
+      const base = await enderecoDoSite()
+      const destino = `${base}/definir-senha`
+
       const convite = await admin.auth.admin.inviteUserByEmail(email, {
         redirectTo: destino,
       })
 
       if (convite.error) {
-        recado = `Piloto salvo, mas o convite não saiu: ${convite.error.message}`
+        recado = `Piloto salvo, mas o convite nao saiu: ${convite.error.message}`
       } else {
-        recado = `Piloto salvo. Convite enviado para ${email} — a pessoa recebe um e-mail para criar a senha e entra como ${papel}.`
+        recado = `Piloto salvo. Convite enviado para ${email} apontando para ${destino} — a pessoa cria a senha e entra como ${papel}.`
       }
     }
   }
@@ -151,4 +157,48 @@ export async function alternarAtivo(id: string, ativo: boolean) {
   const { error } = await supabase.from('pilotos').update({ ativo: !ativo }).eq('id', id)
   if (error) throw new Error(`Falha ao alterar status: ${error.message}`)
   revalidatePath('/', 'layout')
+}
+
+export async function reenviarAcesso(pilotoId: string) {
+  const supabase = await createClient()
+  const admin = createAdminClient()
+
+  const { data: piloto } = await admin
+    .from('pilotos')
+    .select('email, nome')
+    .eq('id', pilotoId)
+    .maybeSingle()
+
+  if (!piloto?.email) {
+    return { ok: false, mensagem: 'Este piloto nao tem e-mail cadastrado.' }
+  }
+
+  const destino = `${await enderecoDoSite()}/definir-senha`
+
+  const { data: temConta } = await admin
+    .from('usuarios')
+    .select('id')
+    .eq('email', piloto.email)
+    .maybeSingle()
+
+  if (temConta) {
+    const { error } = await supabase.auth.resetPasswordForEmail(piloto.email, {
+      redirectTo: destino,
+    })
+    if (error) return { ok: false, mensagem: `Nao consegui enviar: ${error.message}` }
+    return {
+      ok: true,
+      mensagem: `Link enviado para ${piloto.email}. Ele ja tinha conta, entao recebeu um link para redefinir a senha.`,
+    }
+  }
+
+  const convite = await admin.auth.admin.inviteUserByEmail(piloto.email, {
+    redirectTo: destino,
+  })
+
+  if (convite.error) {
+    return { ok: false, mensagem: `Nao consegui convidar: ${convite.error.message}` }
+  }
+
+  return { ok: true, mensagem: `Convite enviado para ${piloto.email}.` }
 }

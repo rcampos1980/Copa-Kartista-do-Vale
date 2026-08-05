@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { salvarPiloto, alternarAtivo } from './actions'
+import { salvarPiloto, alternarAtivo, reenviarAcesso } from './actions'
 import { GestaoPilotos } from './GestaoPilotos'
 import { MenuAdmin } from '@/components/MenuAdmin'
 
@@ -34,7 +34,6 @@ export default async function AdminPilotosPage() {
       peso: partPorPiloto.get(p.id)?.peso ?? null,
       tipo: partPorPiloto.get(p.id)?.tipo ?? null,
     }))
-    // Ativos primeiro, depois inativos; cada grupo em ordem alfabetica
     .sort((a, b) => {
       if (a.ativo !== b.ativo) return a.ativo ? -1 : 1
       return a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' })
@@ -57,6 +56,7 @@ export default async function AdminPilotosPage() {
         pilotos={pilotosCompletos}
         salvarPiloto={salvarPiloto}
         alternarAtivo={alternarAtivo}
+        reenviarAcesso={reenviarAcesso}
       />
     </main>
   )
