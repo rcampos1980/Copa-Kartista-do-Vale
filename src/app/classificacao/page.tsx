@@ -45,10 +45,10 @@ export default async function ClassificacaoPage() {
             return (
               <div
                 key={piloto.piloto_id}
-                className={`bg-surface border rounded-2xl px-3 py-5 md:px-6 md:py-6 flex flex-col items-center text-center ${
+                className={`bg-surface border rounded-2xl px-2 md:px-6 flex flex-col items-center justify-center text-center ${
                   primeiro
-                    ? 'border-gold/40 md:pb-10'
-                    : 'border-border'
+                    ? 'border-gold/40 py-6 min-h-[220px] md:min-h-0 md:py-6 md:pb-10'
+                    : 'border-border py-4 min-h-[164px] md:min-h-0 md:py-6'
                 }`}
               >
                 <Medal className={coresMedalha[idx]} size={primeiro ? 40 : 30} />

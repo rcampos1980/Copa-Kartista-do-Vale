@@ -142,7 +142,9 @@ export default async function EstatisticasPage() {
               </div>
               <p className="font-display font-bold text-white text-2xl leading-none">
                 {etapasRealizadas}
-                <span className="text-white/30 text-base">/{(etapas ?? []).length}</span>
+              </p>
+              <p className="mt-1 text-white/40 text-xs">
+                de {(etapas ?? []).length} no ano
               </p>
             </div>
             <div className="bg-surface border border-border rounded-2xl p-4">
