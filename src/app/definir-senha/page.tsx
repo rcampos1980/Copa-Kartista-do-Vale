@@ -22,8 +22,8 @@ export default function DefinirSenhaPage() {
     setErro(null)
 
     const limpo = codigo.replace(/\D/g, '')
-    if (limpo.length !== 6) {
-      setErro('O código tem 6 números.')
+    if (limpo.length < 6) {
+      setErro('Digite o código completo que veio no e-mail.')
       return
     }
 
@@ -83,7 +83,7 @@ export default function DefinirSenhaPage() {
 
         {etapa === 'codigo' && (
           <form onSubmit={conferirCodigo} className="flex flex-col gap-3">
-            <p className="text-white/40 text-sm mb-3">Digite o e-mail cadastrado e o código de 6 números que você recebeu.</p>
+            <p className="text-white/40 text-sm mb-3">Digite o e-mail cadastrado e o código que você recebeu.</p>
 
             <div>
               <label className={rotulo}>E-mail</label>
@@ -91,8 +91,8 @@ export default function DefinirSenhaPage() {
             </div>
 
             <div>
-              <label className={rotulo}>Código de 6 números</label>
-              <input type="text" inputMode="numeric" value={codigo} onChange={(ev) => setCodigo(ev.target.value)} className={`${input} tracking-[0.4em] text-center text-lg`} placeholder="000000" maxLength={7} required />
+              <label className={rotulo}>Código do e-mail</label>
+              <input type="text" inputMode="numeric" value={codigo} onChange={(ev) => setCodigo(ev.target.value)} className={`${input} tracking-[0.25em] text-center text-lg`} placeholder="00000000" maxLength={12} required />
             </div>
 
             {erro && <p className="text-red-400 text-sm">{erro}</p>}
