@@ -48,11 +48,6 @@ export default async function PerfilPage({
               <User className="text-white/30" size={40} />
             </div>
           )}
-          {piloto.numero_kart != null && (
-            <span className="absolute -bottom-1 -right-1 bg-accent text-white text-sm font-display font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-bg">
-              {piloto.numero_kart}
-            </span>
-          )}
         </div>
         <div>
           <h1 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight">

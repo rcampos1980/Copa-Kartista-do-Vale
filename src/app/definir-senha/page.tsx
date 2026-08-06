@@ -1,43 +1,49 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { KeyRound } from 'lucide-react'
+import { KeyRound, ArrowRight } from 'lucide-react'
 
 export default function DefinirSenhaPage() {
   const router = useRouter()
   const [supabase] = useState(() => createClient())
 
-  const [pronto, setPronto] = useState(false)
-  const [temSessao, setTemSessao] = useState(false)
+  const [etapa, setEtapa] = useState<'codigo' | 'senha'>('codigo')
+  const [email, setEmail] = useState('')
+  const [codigo, setCodigo] = useState('')
   const [senha, setSenha] = useState('')
   const [confirmacao, setConfirmacao] = useState('')
   const [erro, setErro] = useState<string | null>(null)
-  const [salvando, setSalvando] = useState(false)
+  const [carregando, setCarregando] = useState(false)
 
-  useEffect(() => {
-    let vivo = true
+  async function conferirCodigo(e: React.FormEvent) {
+    e.preventDefault()
+    setErro(null)
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!vivo) return
-      setTemSessao(Boolean(data.session))
-      setPronto(true)
-    })
-
-    const { data: assinatura } = supabase.auth.onAuthStateChange((_evento, sessao) => {
-      if (!vivo) return
-      setTemSessao(Boolean(sessao))
-      setPronto(true)
-    })
-
-    return () => {
-      vivo = false
-      assinatura.subscription.unsubscribe()
+    const limpo = codigo.replace(/\D/g, '')
+    if (limpo.length !== 6) {
+      setErro('O código tem 6 números.')
+      return
     }
-  }, [supabase])
 
-  async function enviar(e: React.FormEvent) {
+    setCarregando(true)
+    const { error } = await supabase.auth.verifyOtp({
+      email: email.trim().toLowerCase(),
+      token: limpo,
+      type: 'recovery',
+    })
+    setCarregando(false)
+
+    if (error) {
+      setErro('Código inválido ou expirado. Peça um novo ao administrador.')
+      return
+    }
+
+    setEtapa('senha')
+  }
+
+  async function salvarSenha(e: React.FormEvent) {
     e.preventDefault()
     setErro(null)
 
@@ -50,9 +56,9 @@ export default function DefinirSenhaPage() {
       return
     }
 
-    setSalvando(true)
+    setCarregando(true)
     const { error } = await supabase.auth.updateUser({ password: senha })
-    setSalvando(false)
+    setCarregando(false)
 
     if (error) {
       setErro(error.message)
@@ -64,6 +70,8 @@ export default function DefinirSenhaPage() {
   }
 
   const input = 'w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-accent transition-colors'
+  const rotulo = 'text-white/60 text-xs block mb-1'
+  const botao = 'mt-2 flex items-center justify-center gap-2 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium rounded-xl px-4 py-2.5 transition-colors'
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-12">
@@ -72,33 +80,48 @@ export default function DefinirSenhaPage() {
           <KeyRound className="text-accent" size={18} />
           <h1 className="font-display text-xl font-bold text-white">Definir senha</h1>
         </div>
-        <p className="text-white/40 text-sm mb-6">Escolha a senha que você vai usar para entrar no site.</p>
 
-        {!pronto && <p className="text-white/50 text-sm">Verificando o convite...</p>}
+        {etapa === 'codigo' && (
+          <form onSubmit={conferirCodigo} className="flex flex-col gap-3">
+            <p className="text-white/40 text-sm mb-3">Digite o e-mail cadastrado e o código de 6 números que você recebeu.</p>
 
-        {pronto && !temSessao && (
-          <div className="text-sm text-white/60 flex flex-col gap-3">
-            <p>Este link não é válido ou já expirou.</p>
-            <p className="text-white/40">Peça ao administrador para reenviar o convite, ou use a opção de recuperar senha na tela de login.</p>
-            <a href="/login" className="text-accent hover:underline">Ir para o login</a>
-          </div>
-        )}
-
-        {pronto && temSessao && (
-          <form onSubmit={enviar} className="flex flex-col gap-3">
             <div>
-              <label className="text-white/60 text-xs block mb-1">Nova senha</label>
-              <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} className={input} placeholder="mínimo 8 caracteres" autoComplete="new-password" />
+              <label className={rotulo}>E-mail</label>
+              <input type="email" value={email} onChange={(ev) => setEmail(ev.target.value)} className={input} placeholder="voce@email.com" autoComplete="username" required />
             </div>
+
             <div>
-              <label className="text-white/60 text-xs block mb-1">Repita a senha</label>
-              <input type="password" value={confirmacao} onChange={(e) => setConfirmacao(e.target.value)} className={input} autoComplete="new-password" />
+              <label className={rotulo}>Código de 6 números</label>
+              <input type="text" inputMode="numeric" value={codigo} onChange={(ev) => setCodigo(ev.target.value)} className={`${input} tracking-[0.4em] text-center text-lg`} placeholder="000000" maxLength={7} required />
             </div>
 
             {erro && <p className="text-red-400 text-sm">{erro}</p>}
 
-            <button type="submit" disabled={salvando} className="mt-2 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium rounded-xl px-4 py-2.5 transition-colors">
-              {salvando ? 'Salvando...' : 'Salvar e entrar'}
+            <button type="submit" disabled={carregando} className={botao}>
+              {carregando ? 'Conferindo...' : 'Continuar'}
+              <ArrowRight size={16} />
+            </button>
+          </form>
+        )}
+
+        {etapa === 'senha' && (
+          <form onSubmit={salvarSenha} className="flex flex-col gap-3">
+            <p className="text-white/40 text-sm mb-3">Código confirmado. Agora escolha a senha que você vai usar para entrar.</p>
+
+            <div>
+              <label className={rotulo}>Nova senha</label>
+              <input type="password" value={senha} onChange={(ev) => setSenha(ev.target.value)} className={input} placeholder="mínimo 8 caracteres" autoComplete="new-password" required />
+            </div>
+
+            <div>
+              <label className={rotulo}>Repita a senha</label>
+              <input type="password" value={confirmacao} onChange={(ev) => setConfirmacao(ev.target.value)} className={input} autoComplete="new-password" required />
+            </div>
+
+            {erro && <p className="text-red-400 text-sm">{erro}</p>}
+
+            <button type="submit" disabled={carregando} className={botao}>
+              {carregando ? 'Salvando...' : 'Salvar e entrar'}
             </button>
           </form>
         )}

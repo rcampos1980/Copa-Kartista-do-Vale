@@ -55,9 +55,6 @@ export function LinhaPiloto({ piloto, alternarAtivo, onEditar, reenviarAcesso }:
         <div className="flex-1 min-w-0">
           <p className="text-white text-sm font-medium truncate">
             {piloto.nome}
-            {piloto.numero_kart != null && (
-              <span className="text-white/40"> · #{piloto.numero_kart}</span>
-            )}
             {piloto.is_admin && (
               <ShieldCheck className="inline-block ml-1.5 text-accent align-[-2px]" size={13} />
             )}

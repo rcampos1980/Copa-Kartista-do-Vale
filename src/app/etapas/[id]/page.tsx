@@ -2,7 +2,8 @@ import { getEtapaDetalhe } from '@/lib/supabase/queries'
 import { createClient } from '@/lib/supabase/server'
 import { formatarData } from '@/lib/format'
 import { BotaoImprimir } from './BotaoImprimir'
-import { ArrowLeft, Calendar, MapPin, Weight, Play, Camera } from 'lucide-react'
+import { PainelLastro } from './PainelLastro'
+import { ArrowLeft, Calendar, MapPin, Play, Camera } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -50,7 +51,11 @@ export default async function EtapaDetalhePage({
     return 'text-white/40'
   }
 
-  const lastroComPeso = lastro.filter((l: { peso: number | null }) => l.peso != null)
+  const lastroComPeso = lastro
+    .filter((l: { peso: number | null }) => l.peso != null)
+    .sort((a: { piloto_nome: string }, b: { piloto_nome: string }) =>
+      a.piloto_nome.localeCompare(b.piloto_nome, 'pt-BR', { sensitivity: 'base' })
+    )
   const pesoAlvo = lastro[0]?.peso_alvo ?? 90
 
   const camp = Array.isArray(etapa.campeonatos) ? etapa.campeonatos[0] : etapa.campeonatos
@@ -115,9 +120,6 @@ export default async function EtapaDetalhePage({
                       </span>
                     )}
                   </div>
-                  {r.piloto_numero != null && (
-                    <span className="text-white/40 text-xs">#{r.piloto_numero}</span>
-                  )}
                 </div>
                 <span className="font-display font-bold text-accent text-lg shrink-0">
                   {r.is_convidado ? '—' : `${r.pontos} pts`}
@@ -133,7 +135,7 @@ export default async function EtapaDetalhePage({
           <h2 className="font-display uppercase text-sm tracking-wide text-white/50 mb-3">
             Vídeos
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
             {videos.map((v) => {
               const yt = idYoutube(v.url)
               return (
@@ -142,7 +144,7 @@ export default async function EtapaDetalhePage({
                   href={v.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group overflow-hidden rounded-2xl border border-border bg-surface transition-colors hover:border-accent/50"
+                  className="group overflow-hidden rounded-xl border border-border bg-surface transition-colors hover:border-accent/60"
                 >
                   <div className="relative aspect-video bg-bg">
                     {yt ? (
@@ -154,12 +156,12 @@ export default async function EtapaDetalhePage({
                       />
                     ) : null}
                     <span className="absolute inset-0 flex items-center justify-center bg-black/35 transition-colors group-hover:bg-black/20">
-                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent">
-                        <Play className="text-white ml-0.5" size={20} fill="currentColor" />
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/90 backdrop-blur-sm">
+                        <Play className="text-white ml-0.5" size={15} fill="currentColor" />
                       </span>
                     </span>
                   </div>
-                  <p className="px-3 py-2.5 text-sm text-white truncate">
+                  <p className="px-2.5 py-2 text-xs text-white/80 truncate">
                     {v.titulo ?? 'Assistir vídeo'}
                   </p>
                 </a>
@@ -174,14 +176,14 @@ export default async function EtapaDetalhePage({
           <h2 className="font-display uppercase text-sm tracking-wide text-white/50 mb-3 flex items-center gap-2">
             <Camera size={15} /> Fotos ({fotos.length})
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-2">
             {fotos.map((f) => (
               <a
                 key={f.id}
                 href={f.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="relative aspect-square overflow-hidden rounded-xl border border-border bg-surface transition-transform hover:scale-[1.02]"
+                className="relative aspect-square overflow-hidden rounded-lg border border-border bg-surface transition-all hover:border-accent/60 hover:brightness-110"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={f.url} alt="" loading="lazy" className="h-full w-full object-cover" />
@@ -191,77 +193,13 @@ export default async function EtapaDetalhePage({
         </div>
       )}
 
-      <div className="area-impressao">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2">
-            <Weight className="text-accent print:hidden" size={18} />
-            <div>
-              <h2 className="font-display uppercase text-sm tracking-wide text-white/50">
-                Relatório de lastro · alvo {pesoAlvo} kg
-              </h2>
-              <p className="hidden print:block text-sm">
-                {etapa.nome} · {etapa.pista} · {formatarData(etapa.data)}
-              </p>
-            </div>
-          </div>
-          <BotaoImprimir nomeArquivo={nomeArquivo} />
-        </div>
+      <PainelLastro
+        itens={lastroComPeso}
+        pesoAlvo={pesoAlvo}
+        linhaImpressao={`${etapa.nome} · ${etapa.pista} · ${formatarData(etapa.data)}`}
+        nomeArquivo={nomeArquivo}
+      />
 
-        {lastroComPeso.length === 0 ? (
-          <p className="text-white/40 text-sm">
-            Nenhum peso cadastrado ainda. Cadastre o peso dos pilotos na área de administração.
-          </p>
-        ) : (
-          <section className="bg-surface border border-border rounded-2xl overflow-hidden">
-            <div className="flex items-center gap-4 px-4 md:px-6 py-2.5 border-b border-border text-white/40 text-xs uppercase tracking-wide">
-              <span className="flex-1">Piloto</span>
-              <span className="w-20 text-right print:hidden">Peso</span>
-              <span className="w-24 text-right">Lastro</span>
-              <span className="w-20 text-right hidden md:inline print:hidden">Total</span>
-            </div>
-            {lastroComPeso.map(
-              (l: {
-                piloto_id: string
-                piloto_nome: string
-                piloto_numero: number | null
-                tipo: string
-                peso: number
-                lastro: number
-              }) => (
-                <div
-                  key={l.piloto_id}
-                  className="flex items-center gap-4 px-4 md:px-6 py-3.5 border-b border-border last:border-b-0"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-white truncate">
-                        {l.piloto_nome}
-                      </span>
-                      {l.tipo === 'convidado' && (
-                        <span className="inline-flex items-center rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-medium text-sky-400 shrink-0">
-                          Convidado
-                        </span>
-                      )}
-                    </div>
-                    {l.piloto_numero != null && (
-                      <span className="text-white/40 text-xs print:hidden">#{l.piloto_numero}</span>
-                    )}
-                  </div>
-                  <span className="w-16 md:w-20 text-right text-white/70 text-sm print:hidden">
-                    {Number(l.peso).toFixed(0)} kg
-                  </span>
-                  <span className="w-20 md:w-24 text-right font-display font-bold text-accent text-lg">
-                    {l.lastro} kg
-                  </span>
-                  <span className="w-16 md:w-20 text-right text-white/50 text-sm hidden md:inline print:hidden">
-                    {Number(l.peso) + Number(l.lastro)} kg
-                  </span>
-                </div>
-              )
-            )}
-          </section>
-        )}
-      </div>
     </main>
   )
 }

@@ -133,17 +133,19 @@ export async function salvarPiloto(formData: FormData) {
         ? `Piloto salvo, mas nao consegui atualizar o acesso: ${error.message}`
         : `Piloto salvo. ${email} ja tinha conta — acesso atualizado para ${papel}.`
     } else {
-      const base = await enderecoDoSite()
-      const destino = `${base}/definir-senha`
-
-      const convite = await admin.auth.admin.inviteUserByEmail(email, {
-        redirectTo: destino,
+      const criacao = await admin.auth.admin.createUser({
+        email,
+        email_confirm: true,
+        password: crypto.randomUUID(),
       })
 
-      if (convite.error) {
-        recado = `Piloto salvo, mas o convite nao saiu: ${convite.error.message}`
+      if (criacao.error) {
+        recado = `Piloto salvo, mas nao consegui criar o acesso: ${criacao.error.message}`
       } else {
-        recado = `Piloto salvo. Convite enviado para ${email} apontando para ${destino} — a pessoa cria a senha e entra como ${papel}.`
+        const envio = await supabase.auth.resetPasswordForEmail(email)
+        recado = envio.error
+          ? `Acesso criado, mas o e-mail nao saiu: ${envio.error.message}`
+          : `Piloto salvo. Codigo de acesso enviado para ${email} — ele entra como ${papel}.`
       }
     }
   }
@@ -173,32 +175,28 @@ export async function reenviarAcesso(pilotoId: string) {
     return { ok: false, mensagem: 'Este piloto nao tem e-mail cadastrado.' }
   }
 
-  const destino = `${await enderecoDoSite()}/definir-senha`
-
   const { data: temConta } = await admin
     .from('usuarios')
     .select('id')
     .eq('email', piloto.email)
     .maybeSingle()
 
-  if (temConta) {
-    const { error } = await supabase.auth.resetPasswordForEmail(piloto.email, {
-      redirectTo: destino,
+  if (!temConta) {
+    const criacao = await admin.auth.admin.createUser({
+      email: piloto.email,
+      email_confirm: true,
+      password: crypto.randomUUID(),
     })
-    if (error) return { ok: false, mensagem: `Nao consegui enviar: ${error.message}` }
-    return {
-      ok: true,
-      mensagem: `Link enviado para ${piloto.email}. Ele ja tinha conta, entao recebeu um link para redefinir a senha.`,
+    if (criacao.error) {
+      return { ok: false, mensagem: `Nao consegui criar o acesso: ${criacao.error.message}` }
     }
   }
 
-  const convite = await admin.auth.admin.inviteUserByEmail(piloto.email, {
-    redirectTo: destino,
-  })
+  const { error } = await supabase.auth.resetPasswordForEmail(piloto.email)
+  if (error) return { ok: false, mensagem: `Nao consegui enviar: ${error.message}` }
 
-  if (convite.error) {
-    return { ok: false, mensagem: `Nao consegui convidar: ${convite.error.message}` }
+  return {
+    ok: true,
+    mensagem: `Codigo enviado para ${piloto.email}. Ele deve abrir /definir-senha e digitar os 6 digitos.`,
   }
-
-  return { ok: true, mensagem: `Convite enviado para ${piloto.email}.` }
 }

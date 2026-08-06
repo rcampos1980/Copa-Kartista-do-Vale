@@ -41,11 +41,6 @@ export default async function PilotosPage() {
                   <User className="text-white/30" size={28} />
                 </div>
               )}
-              {piloto.numero_kart != null && (
-                <span className="absolute -bottom-1 -right-1 bg-accent text-white text-xs font-display font-bold rounded-full w-6 h-6 flex items-center justify-center border-2 border-surface">
-                  {piloto.numero_kart}
-                </span>
-              )}
             </div>
             <div className="min-w-0">
               <p className="font-display font-semibold text-white text-lg leading-tight truncate">
