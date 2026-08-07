@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { FormPiloto } from './FormPiloto'
 import { LinhaPiloto } from './LinhaPiloto'
+import { Plus, Search, X } from 'lucide-react'
 
 type Piloto = {
   id: string
@@ -31,58 +32,112 @@ type Props = {
   reenviarAcesso: (pilotoId: string) => Promise<Resultado>
 }
 
-export function GestaoPilotos({
-  pilotos,
-  salvarPiloto,
-  alternarAtivo,
-  reenviarAcesso,
-}: Props) {
+export function GestaoPilotos({ pilotos, salvarPiloto, alternarAtivo, reenviarAcesso }: Props) {
+  const [painel, setPainel] = useState<'fechado' | 'novo' | 'editando'>('fechado')
   const [editando, setEditando] = useState<Piloto | null>(null)
+  const [busca, setBusca] = useState('')
 
-  function editar(id: string) {
+  const filtrados = useMemo(() => {
+    const t = busca.trim().toLowerCase()
+    if (!t) return pilotos
+    return pilotos.filter(
+      (p) =>
+        p.nome.toLowerCase().includes(t) ||
+        (p.email ?? '').toLowerCase().includes(t) ||
+        (p.cidade ?? '').toLowerCase().includes(t)
+    )
+  }, [pilotos, busca])
+
+  const ativos = pilotos.filter((p) => p.ativo).length
+  const comAcesso = pilotos.filter((p) => p.email).length
+
+  function abrirNovo() {
+    setEditando(null)
+    setPainel('novo')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function abrirEdicao(id: string) {
     const p = pilotos.find((x) => x.id === id)
-    if (p) {
-      setEditando(p)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
+    if (!p) return
+    setEditando(p)
+    setPainel('editando')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function fechar() {
+    setPainel('fechado')
+    setEditando(null)
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <section className="bg-surface border border-border rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display uppercase text-sm tracking-wide text-white/50">
-            {editando ? `Editando: ${editando.nome}` : 'Novo piloto'}
-          </h2>
-          {editando && (
-            <button onClick={() => setEditando(null)} className="text-white/50 hover:text-white text-xs">
-              Cancelar edição
+    <div className="flex flex-col gap-5">
+      {painel !== 'fechado' && (
+        <section className="bg-surface border border-accent/30 rounded-2xl p-5 md:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display uppercase text-sm tracking-wide text-white/50">
+              {painel === 'editando' ? `Editando: ${editando?.nome}` : 'Novo piloto'}
+            </h2>
+            <button
+              onClick={fechar}
+              className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs transition-colors"
+            >
+              <X size={14} /> Fechar
+            </button>
+          </div>
+          <div className="max-w-xl">
+            <FormPiloto salvarPiloto={salvarPiloto} pilotoEditando={editando} onSalvo={fechar} />
+          </div>
+        </section>
+      )}
+
+      <section className="bg-surface border border-border rounded-2xl p-5 md:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 className="font-display uppercase text-sm tracking-wide text-white/50">
+              Pilotos cadastrados
+            </h2>
+            <p className="text-white/30 text-xs mt-0.5">
+              {pilotos.length} no total · {ativos} ativos · {comAcesso} com acesso ao site
+            </p>
+          </div>
+          {painel === 'fechado' && (
+            <button
+              onClick={abrirNovo}
+              className="flex items-center gap-2 bg-accent hover:bg-accent/90 text-white font-medium rounded-xl px-4 py-2.5 text-sm transition-colors"
+            >
+              <Plus size={16} /> Novo piloto
             </button>
           )}
         </div>
-        <FormPiloto
-          salvarPiloto={salvarPiloto}
-          pilotoEditando={editando}
-          onSalvo={() => setEditando(null)}
-        />
-      </section>
 
-      <section className="bg-surface border border-border rounded-2xl p-6">
-        <h2 className="font-display uppercase text-sm tracking-wide text-white/50 mb-4">
-          Pilotos cadastrados ({pilotos.length})
-        </h2>
-        <div className="flex flex-col gap-2">
-          {pilotos.map((p) => (
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={15} />
+          <input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar por nome, e-mail ou cidade"
+            className="w-full bg-bg border border-border rounded-xl pl-9 pr-3 py-2.5 text-white text-sm outline-none focus:border-accent transition-colors"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
+          {filtrados.map((p) => (
             <LinhaPiloto
               key={p.id}
               piloto={p}
               alternarAtivo={alternarAtivo}
-              onEditar={editar}
+              onEditar={abrirEdicao}
               reenviarAcesso={reenviarAcesso}
             />
           ))}
-          {pilotos.length === 0 && <p className="text-white/40 text-sm">Nenhum piloto ainda.</p>}
         </div>
+
+        {filtrados.length === 0 && (
+          <p className="text-white/40 text-sm py-4">
+            {busca ? 'Nenhum piloto encontrado para essa busca.' : 'Nenhum piloto ainda.'}
+          </p>
+        )}
       </section>
     </div>
   )

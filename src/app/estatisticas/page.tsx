@@ -73,25 +73,37 @@ export default async function EstatisticasPage() {
   const etapasRealizadas = (etapas ?? []).filter((e) => e.status === 'realizada').length
   const maxPontos = linhas[0]?.pontos ?? 0
 
-  const lider = (chave: (l: Linha) => number) =>
-    linhas.length
-      ? [...linhas].sort((a, b) => chave(b) - chave(a) || a.nome.localeCompare(b.nome))[0]
-      : null
+  const porNome = (a: string, b: string) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' })
 
-  const maisVitorias = lider((l) => l.vitorias)
-  const maisPodios = lider((l) => l.podios)
-  const maisVoltas = lider((l) => l.voltas)
-  const maisRegular = linhas.length
-    ? [...linhas]
-        .filter((l) => l.corridas >= Math.max(1, Math.ceil(etapasRealizadas / 2)))
-        .sort((a, b) => a.somaPos / a.corridas - b.somaPos / b.corridas)[0]
-    : null
+  const lideres = (chave: (l: Linha) => number) => {
+    if (!linhas.length) return { nomes: [] as string[], valor: 0 }
+    const max = Math.max(...linhas.map(chave))
+    if (max <= 0) return { nomes: [] as string[], valor: 0 }
+    return {
+      nomes: linhas.filter((l) => chave(l) === max).map((l) => l.nome).sort(porNome),
+      valor: max,
+    }
+  }
+
+  const minimoCorridas = Math.max(1, Math.ceil(etapasRealizadas / 2))
+  const elegiveis = linhas.filter((l) => l.corridas >= minimoCorridas)
+  const melhorMedia = elegiveis.length
+    ? Math.min(...elegiveis.map((l) => l.somaPos / l.corridas))
+    : 0
+  const regulares = elegiveis
+    .filter((l) => Math.abs(l.somaPos / l.corridas - melhorMedia) < 0.001)
+    .map((l) => l.nome)
+    .sort(porNome)
+
+  const maisVitorias = lideres((l) => l.vitorias)
+  const maisPodios = lideres((l) => l.podios)
+  const maisVoltas = lideres((l) => l.voltas)
 
   const destaques = [
-    { icone: Trophy, cor: 'text-gold', rotulo: 'Mais vitórias', dado: maisVitorias, valor: maisVitorias?.vitorias ?? 0, sufixo: 'vitórias' },
-    { icone: Medal, cor: 'text-silver', rotulo: 'Mais pódios', dado: maisPodios, valor: maisPodios?.podios ?? 0, sufixo: 'pódios' },
-    { icone: Zap, cor: 'text-accent', rotulo: 'Mais voltas rápidas', dado: maisVoltas, valor: maisVoltas?.voltas ?? 0, sufixo: 'voltas' },
-    { icone: Target, cor: 'text-bronze', rotulo: 'Mais regular', dado: maisRegular, valor: maisRegular ? Number((maisRegular.somaPos / maisRegular.corridas).toFixed(1)) : 0, sufixo: 'posição média' },
+    { icone: Trophy, cor: 'text-gold', rotulo: 'Mais vitórias', nomes: maisVitorias.nomes, valor: maisVitorias.valor, sufixo: maisVitorias.valor === 1 ? 'vitória' : 'vitórias' },
+    { icone: Medal, cor: 'text-silver', rotulo: 'Mais pódios', nomes: maisPodios.nomes, valor: maisPodios.valor, sufixo: maisPodios.valor === 1 ? 'pódio' : 'pódios' },
+    { icone: Zap, cor: 'text-accent', rotulo: 'Mais voltas rápidas', nomes: maisVoltas.nomes, valor: maisVoltas.valor, sufixo: maisVoltas.valor === 1 ? 'volta' : 'voltas' },
+    { icone: Target, cor: 'text-bronze', rotulo: 'Mais regular', nomes: regulares, valor: Number(melhorMedia.toFixed(1)), sufixo: 'posição média' },
   ]
 
   return (
@@ -120,9 +132,16 @@ export default async function EstatisticasPage() {
                       {d.rotulo}
                     </span>
                   </div>
-                  <p className="font-display font-bold text-white text-base leading-tight truncate">
-                    {d.dado?.nome ?? '—'}
-                  </p>
+                  <div className="flex flex-col gap-0.5">
+                    {d.nomes.length === 0 && (
+                      <p className="font-display font-bold text-white/30 text-base leading-tight">—</p>
+                    )}
+                    {d.nomes.map((n) => (
+                      <p key={n} className={`font-display font-bold text-white leading-tight truncate ${d.nomes.length > 2 ? 'text-sm' : 'text-base'}`}>
+                        {n}
+                      </p>
+                    ))}
+                  </div>
                   <p className="mt-1 font-display font-bold text-accent text-2xl leading-none">
                     {d.valor}
                     <span className="ml-1.5 text-white/30 text-[11px] font-sans font-normal">

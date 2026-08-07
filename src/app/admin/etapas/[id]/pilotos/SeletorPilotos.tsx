@@ -81,7 +81,6 @@ export function SeletorPilotos({ etapaId, pilotos, selecionadosIniciais }: Props
               </span>
               <span className="flex-1 text-white text-sm font-medium truncate">
                 {p.nome}
-                {p.numero_kart != null && <span className="text-white/40"> · #{p.numero_kart}</span>}
               </span>
             </button>
           )

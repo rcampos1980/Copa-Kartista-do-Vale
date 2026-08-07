@@ -21,8 +21,10 @@ type PilotoEditando = {
   is_admin?: boolean
 } | null
 
+type Resultado = { ok: boolean; mensagem: string }
+
 type Props = {
-  salvarPiloto: (formData: FormData) => Promise<{ ok: boolean; mensagem: string }>
+  salvarPiloto: (formData: FormData) => Promise<Resultado>
   pilotoEditando?: PilotoEditando
   onSalvo?: () => void
 }
@@ -34,35 +36,36 @@ export function FormPiloto({ salvarPiloto, pilotoEditando, onSalvo }: Props) {
   const [preview, setPreview] = useState<string | null>(null)
   const [ativo, setAtivo] = useState(true)
   const [ehAdmin, setEhAdmin] = useState(false)
-  const [aviso, setAviso] = useState<{ ok: boolean; mensagem: string } | null>(null)
+  const [aviso, setAviso] = useState<Resultado | null>(null)
 
   useEffect(() => {
-    if (pilotoEditando && formRef.current) {
-      const f = formRef.current
-      ;(f.elements.namedItem('nome') as HTMLInputElement).value = pilotoEditando.nome ?? ''
-      ;(f.elements.namedItem('numero_kart') as HTMLInputElement).value =
-        pilotoEditando.numero_kart?.toString() ?? ''
-      ;(f.elements.namedItem('idade') as HTMLInputElement).value =
-        pilotoEditando.idade?.toString() ?? ''
-      ;(f.elements.namedItem('cidade') as HTMLInputElement).value = pilotoEditando.cidade ?? ''
-      ;(f.elements.namedItem('telefone') as HTMLInputElement).value =
-        pilotoEditando.telefone ?? ''
-      ;(f.elements.namedItem('categoria') as HTMLInputElement).value =
-        pilotoEditando.categoria ?? ''
-      ;(f.elements.namedItem('estilo_pilotagem') as HTMLInputElement).value =
-        pilotoEditando.estilo_pilotagem ?? ''
-      ;(f.elements.namedItem('caracteristicas') as HTMLTextAreaElement).value =
-        pilotoEditando.caracteristicas ?? ''
-      ;(f.elements.namedItem('peso') as HTMLInputElement).value =
-        pilotoEditando.peso != null ? String(pilotoEditando.peso) : ''
-      ;(f.elements.namedItem('tipo') as HTMLSelectElement).value = pilotoEditando.tipo ?? ''
-      ;(f.elements.namedItem('email') as HTMLInputElement).value = pilotoEditando.email ?? ''
+    setAviso(null)
+    const f = formRef.current
+    if (!f) return
+
+    if (pilotoEditando) {
+      const campo = (nome: string) => f.elements.namedItem(nome) as HTMLInputElement | null
+      const set = (nome: string, valor: string) => {
+        const el = campo(nome)
+        if (el) el.value = valor
+      }
+      set('nome', pilotoEditando.nome ?? '')
+      set('numero_kart', pilotoEditando.numero_kart?.toString() ?? '')
+      set('idade', pilotoEditando.idade?.toString() ?? '')
+      set('cidade', pilotoEditando.cidade ?? '')
+      set('telefone', pilotoEditando.telefone ?? '')
+      set('categoria', pilotoEditando.categoria ?? '')
+      set('estilo_pilotagem', pilotoEditando.estilo_pilotagem ?? '')
+      set('caracteristicas', pilotoEditando.caracteristicas ?? '')
+      set('peso', pilotoEditando.peso != null ? String(pilotoEditando.peso) : '')
+      set('tipo', pilotoEditando.tipo ?? '')
+      set('email', pilotoEditando.email ?? '')
       setFotoAtual(pilotoEditando.foto_url ?? null)
       setPreview(null)
       setAtivo(pilotoEditando.ativo ?? true)
       setEhAdmin(pilotoEditando.is_admin ?? false)
-    } else if (!pilotoEditando && formRef.current) {
-      formRef.current.reset()
+    } else {
+      f.reset()
       setFotoAtual(null)
       setPreview(null)
       setAtivo(true)
@@ -83,11 +86,6 @@ export function FormPiloto({ salvarPiloto, pilotoEditando, onSalvo }: Props) {
     setSalvando(false)
     setAviso(resultado)
     if (!resultado.ok) return
-    formRef.current?.reset()
-    setFotoAtual(null)
-    setPreview(null)
-    setAtivo(true)
-    setEhAdmin(false)
     onSalvo?.()
   }
 
@@ -101,7 +99,6 @@ export function FormPiloto({ salvarPiloto, pilotoEditando, onSalvo }: Props) {
       <input type="hidden" name="ativo" value={ativo ? 'true' : 'false'} />
       <input type="hidden" name="is_admin" value={ehAdmin ? 'true' : 'false'} />
 
-      {/* Foto + Ativo */}
       <div className="flex items-center gap-4">
         <div className="w-20 h-20 rounded-full bg-bg border border-border overflow-hidden flex items-center justify-center shrink-0">
           {imagem ? (
@@ -114,13 +111,7 @@ export function FormPiloto({ salvarPiloto, pilotoEditando, onSalvo }: Props) {
         <div className="flex flex-col gap-2">
           <label className="flex items-center gap-2 text-sm text-white/70 border border-border hover:border-accent/50 rounded-xl px-3 py-2 cursor-pointer transition-colors w-fit">
             <Upload size={16} /> Escolher foto
-            <input
-              name="foto"
-              type="file"
-              accept="image/*"
-              onChange={aoEscolherFoto}
-              className="hidden"
-            />
+            <input name="foto" type="file" accept="image/*" onChange={aoEscolherFoto} className="hidden" />
           </label>
           <button
             type="button"
@@ -131,9 +122,7 @@ export function FormPiloto({ salvarPiloto, pilotoEditando, onSalvo }: Props) {
                 : 'bg-white/5 text-white/40 border border-border'
             }`}
           >
-            <span
-              className={`w-2 h-2 rounded-full ${ativo ? 'bg-emerald-400' : 'bg-white/30'}`}
-            />
+            <span className={`w-2 h-2 rounded-full ${ativo ? 'bg-emerald-400' : 'bg-white/30'}`} />
             {ativo ? 'Ativo' : 'Inativo'}
           </button>
         </div>
@@ -144,22 +133,13 @@ export function FormPiloto({ salvarPiloto, pilotoEditando, onSalvo }: Props) {
         <input name="nome" required className={input} placeholder="Nome do piloto" />
       </div>
 
-      {/* Acesso ao site */}
       <div className="rounded-xl border border-border bg-bg/50 p-3 flex flex-col gap-3">
-        <p className="text-white/40 text-[10px] uppercase tracking-widest">
-          Acesso ao site
-        </p>
+        <p className="text-white/40 text-[10px] uppercase tracking-widest">Acesso ao site</p>
         <div>
           <label className={label}>E-mail de login</label>
-          <input
-            name="email"
-            type="email"
-            autoComplete="off"
-            className={input}
-            placeholder="piloto@email.com"
-          />
+          <input name="email" type="email" autoComplete="off" className={input} placeholder="piloto@email.com" />
           <p className="mt-1 text-white/30 text-[11px]">
-            Só quem tiver e-mail aqui consegue criar conta no site. Deixe em branco para não dar acesso.
+            Ao salvar com um e-mail novo, a conta é criada e um código de acesso é enviado. Em branco, o piloto não tem acesso.
           </p>
         </div>
         <button
@@ -195,9 +175,7 @@ export function FormPiloto({ salvarPiloto, pilotoEditando, onSalvo }: Props) {
         <div>
           <label className={label}>Tipo *</label>
           <select name="tipo" required defaultValue="" className={input}>
-            <option value="" disabled>
-              Selecione...
-            </option>
+            <option value="" disabled>Selecione...</option>
             <option value="fixo">Fixo</option>
             <option value="convidado">Convidado</option>
           </select>
@@ -231,7 +209,13 @@ export function FormPiloto({ salvarPiloto, pilotoEditando, onSalvo }: Props) {
       </div>
 
       {aviso && (
-        <p className={`rounded-xl border px-3 py-2.5 text-sm ${aviso.ok ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' : 'border-red-500/40 bg-red-500/10 text-red-300'}`}>
+        <p
+          className={`rounded-xl border px-3 py-2.5 text-sm ${
+            aviso.ok
+              ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+              : 'border-red-500/40 bg-red-500/10 text-red-300'
+          }`}
+        >
           {aviso.mensagem}
         </p>
       )}
