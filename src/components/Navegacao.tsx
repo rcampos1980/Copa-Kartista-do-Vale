@@ -10,6 +10,7 @@ import {
   Users,
   Flag,
   BarChart3,
+  BookOpen,
   Settings,
   LogOut,
   LogIn,
@@ -20,6 +21,7 @@ const itens = [
   { href: '/classificacao', label: 'Classificação', icon: Trophy },
   { href: '/pilotos', label: 'Pilotos', icon: Users },
   { href: '/etapas', label: 'Etapas', icon: Flag },
+  { href: '/regulamento', label: 'Regras', icon: BookOpen },
   { href: '/estatisticas', label: 'Stats', icon: BarChart3 },
 ]
 

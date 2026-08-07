@@ -2,12 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Users, Flag, Trophy } from 'lucide-react'
+import { Users, Flag, Trophy, CalendarRange, LifeBuoy, BarChart3 } from 'lucide-react'
 
 const itens = [
   { href: '/admin/pilotos', label: 'Pilotos', icon: Users },
   { href: '/admin/etapas', label: 'Etapas', icon: Flag },
   { href: '/admin/pontuacao', label: 'Pontuação', icon: Trophy },
+  { href: '/admin/temporadas', label: 'Temporadas', icon: CalendarRange },
+  { href: '/admin/visitas', label: 'Visitas', icon: BarChart3 },
+  { href: '/admin/manual', label: 'Manual', icon: LifeBuoy },
 ]
 
 export function MenuAdmin() {

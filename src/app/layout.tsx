@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Rajdhani, Inter } from "next/font/google";
 import "./globals.css";
 import { Navegacao } from "@/components/Navegacao";
+import { Rastreador } from "@/components/Rastreador";
 import { createClient } from "@/lib/supabase/server";
 
 const rajdhani = Rajdhani({
@@ -43,6 +44,7 @@ export default async function RootLayout({
   return (
     <html lang="pt-BR" className={`${rajdhani.variable} ${inter.variable}`}>
       <body className="font-sans antialiased">
+        <Rastreador />
         <Navegacao isAdmin={isAdmin} />
         <div className="md:pl-56 pb-20 md:pb-0">{children}</div>
       </body>

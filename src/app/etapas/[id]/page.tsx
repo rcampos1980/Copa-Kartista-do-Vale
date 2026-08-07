@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatarData } from '@/lib/format'
 import { BotaoImprimir } from './BotaoImprimir'
 import { PainelLastro } from './PainelLastro'
+import { recalcularLastro, ajustarLastro } from './actions'
 import { ArrowLeft, Calendar, MapPin, Play, Camera } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -34,6 +35,17 @@ export default async function EtapaDetalhePage({
   const { etapa, resultados, lastro } = dados
 
   const supabase = await createClient()
+
+  const { data: dadosUser } = await supabase.auth.getUser()
+  let isAdmin = false
+  if (dadosUser?.user) {
+    const { data: perfil } = await supabase
+      .from('usuarios')
+      .select('role')
+      .eq('id', dadosUser.user.id)
+      .maybeSingle()
+    isAdmin = perfil?.role === 'admin'
+  }
   const { data: midiaBruta } = await supabase
     .from('midia_etapa')
     .select('id, tipo, url, titulo')
@@ -194,6 +206,10 @@ export default async function EtapaDetalhePage({
       )}
 
       <PainelLastro
+        etapaId={id}
+        isAdmin={isAdmin}
+        recalcularLastro={recalcularLastro}
+        ajustarLastro={ajustarLastro}
         itens={lastroComPeso}
         pesoAlvo={pesoAlvo}
         linhaImpressao={`${etapa.nome} · ${etapa.pista} · ${formatarData(etapa.data)}`}

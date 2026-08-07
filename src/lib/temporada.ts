@@ -3,24 +3,41 @@ import { createClient } from '@/lib/supabase/server'
 
 const COOKIE = 'temporada'
 
-export type Temporada = { id: string; ano: number; nome: string | null }
+export type Temporada = {
+  id: string
+  ano: number
+  nome: string | null
+  visivel?: boolean
+  regulamento?: string | null
+  peso_alvo?: number | null
+  bonus_melhor_volta?: number | null
+}
 
 export async function getTemporadas(): Promise<Temporada[]> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('campeonatos')
-    .select('id, ano, nome')
+    .select('id, ano, nome, visivel')
+    .eq('visivel', true)
     .order('ano', { ascending: false })
   return data ?? []
 }
 
-// Ano selecionado pelo cookie; se ausente ou invalido, usa o mais recente (corrente)
+export async function getTemporadasTodas(): Promise<Temporada[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('campeonatos')
+    .select('id, ano, nome, visivel, regulamento, peso_alvo, bonus_melhor_volta')
+    .order('ano', { ascending: false })
+  return data ?? []
+}
+
 export async function getAnoSelecionado(): Promise<number | null> {
   const temporadas = await getTemporadas()
   if (temporadas.length === 0) return null
 
   const anos = temporadas.map((t) => t.ano)
-  const maisRecente = anos[0] // ja vem ordenado desc
+  const maisRecente = anos[0]
 
   const cookieStore = await cookies()
   const bruto = cookieStore.get(COOKIE)?.value
@@ -30,4 +47,19 @@ export async function getAnoSelecionado(): Promise<number | null> {
     return escolhido
   }
   return maisRecente
+}
+
+export async function getRegulamento(ano: number | null) {
+  const supabase = await createClient()
+  const consulta = supabase
+    .from('campeonatos')
+    .select('id, ano, nome, regulamento')
+    .eq('visivel', true)
+
+  const { data } =
+    ano != null
+      ? await consulta.eq('ano', ano).maybeSingle()
+      : await consulta.order('ano', { ascending: false }).limit(1).maybeSingle()
+
+  return data
 }
