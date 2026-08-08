@@ -14,9 +14,9 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: 'pt-BR',
     categories: ['sports'],
     icons: [
-      { src: '/icone-192', sizes: '192x192', type: 'image/png', purpose: 'any' },
-      { src: '/icone-512', sizes: '512x512', type: 'image/png', purpose: 'any' },
-      { src: '/icone-512', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      { src: '/icone-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: '/icone-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: '/icone-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
     shortcuts: [
       { name: 'Classificação', url: '/classificacao' },
