@@ -46,13 +46,8 @@ export default async function PilotosPage() {
               <p className="font-display font-semibold text-white text-base leading-tight truncate">
                 {piloto.nome}
               </p>
-              <div className="mt-1 flex items-center gap-2 min-w-0">
+              <div className="mt-1">
                 <BadgeTipo tipo={piloto.tipo} />
-                {piloto.numero_kart != null && (
-                  <span className="text-white/40 text-xs truncate num-tab">
-                    Kart {piloto.numero_kart}
-                  </span>
-                )}
               </div>
             </div>
           </Link>

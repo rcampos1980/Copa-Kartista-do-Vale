@@ -147,11 +147,8 @@ export default async function PerfilPage({
         </div>
         <div>
           <h1 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight">{piloto.nome}</h1>
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-2">
             <BadgeTipo tipo={piloto.tipo} />
-            {piloto.numero_kart != null && (
-              <span className="text-white/50 text-sm num-tab">Kart {piloto.numero_kart}</span>
-            )}
           </div>
         </div>
       </header>
