@@ -1,4 +1,5 @@
 import { getClassificacao } from '@/lib/supabase/queries'
+import { BotaoCompartilhar } from './BotaoCompartilhar'
 import { pluralizar } from '@/lib/format'
 import { Medal } from 'lucide-react'
 
@@ -14,6 +15,11 @@ export default async function ClassificacaoPage() {
   }
 
   const { campeonato, classificacao } = dados
+  const etapasRealizadas = Math.max(
+    0,
+    ...classificacao.map((c: { corridas?: number }) => c.corridas ?? 0)
+  )
+
   const podio = classificacao.slice(0, 3)
   const restante = classificacao.slice(3)
 
@@ -22,13 +28,23 @@ export default async function ClassificacaoPage() {
 
   return (
     <main className="min-h-screen px-4 py-8 md:px-10 md:py-12">
-      <header className="mb-8">
-        <p className="text-sm uppercase tracking-widest text-white/50 font-display">
-          Classificação · Temporada {campeonato.ano}
-        </p>
-        <h1 className="text-3xl md:text-4xl font-display font-bold text-white">
-          Classificação Geral
-        </h1>
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm uppercase tracking-widest text-white/50 font-display">
+            Classificação · Temporada {campeonato.ano}
+          </p>
+          <h1 className="text-3xl md:text-4xl font-display font-bold text-white">
+            Classificação Geral
+          </h1>
+        </div>
+        <BotaoCompartilhar
+          ano={campeonato.ano}
+          etapas={etapasRealizadas}
+          pilotos={classificacao.map((c: { nome: string; pontos_totais: number }) => ({
+            nome: c.nome,
+            pontos: c.pontos_totais,
+          }))}
+        />
       </header>
 
       {classificacao.length === 0 && (
