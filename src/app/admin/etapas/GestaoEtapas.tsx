@@ -13,6 +13,7 @@ type Etapa = {
   horario?: string | null
   status: string
   observacoes?: string | null
+  link_mapa?: string | null
 }
 
 type Props = {

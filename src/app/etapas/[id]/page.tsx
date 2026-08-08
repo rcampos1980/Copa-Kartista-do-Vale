@@ -5,7 +5,7 @@ import { PainelLastro } from './PainelLastro'
 import { Galeria } from './Galeria'
 import { AcoesEtapa } from './AcoesEtapa'
 import { recalcularLastro, ajustarLastro } from './actions'
-import { ArrowLeft, Calendar, MapPin, Play, Trophy, Zap, Users, TrendingUp, TrendingDown } from 'lucide-react'
+import { ArrowLeft, Calendar, Clock, MapPin, Navigation, Play, Trophy, Zap, Users, TrendingUp, TrendingDown } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -128,7 +128,18 @@ export default async function EtapaDetalhePage({
           <span className="flex items-center gap-1.5">
             <Calendar size={14} /> {formatarData(etapa.data)}
           </span>
+          {etapa.horario && (
+            <span className="flex items-center gap-1.5">
+              <Clock size={14} /> {String(etapa.horario).slice(0, 5)}
+            </span>
+          )}
         </div>
+
+        {etapa.link_mapa && (
+          <a href={etapa.link_mapa} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-white/70 hover:border-accent/50 hover:text-white transition-colors">
+            <Navigation size={15} /> Como chegar
+          </a>
+        )}
       </header>
 
       <AcoesEtapa etapaId={id} titulo={`${etapa.pista}`} jaAconteceu={resultados.length > 0} />

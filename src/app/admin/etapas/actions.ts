@@ -21,6 +21,7 @@ export async function salvarEtapa(formData: FormData) {
     horario: (formData.get('horario') as string) || null,
     status: (formData.get('status') as string) || 'agendada',
     observacoes: (formData.get('observacoes') as string) || null,
+    link_mapa: ((formData.get('link_mapa') as string) || '').trim() || null,
   }
 
   if (id) {

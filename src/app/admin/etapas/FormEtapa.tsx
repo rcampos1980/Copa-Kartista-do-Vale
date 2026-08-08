@@ -10,6 +10,7 @@ type EtapaEditando = {
   horario?: string | null
   status: string
   observacoes?: string | null
+  link_mapa?: string | null
 } | null
 
 type Props = {
@@ -38,6 +39,7 @@ export function FormEtapa({ salvarEtapa, etapaEditando, onSalvo, onCancelar }: P
       set('horario', etapaEditando.horario ? String(etapaEditando.horario).slice(0, 5) : '')
       set('status', etapaEditando.status ?? 'agendada')
       set('observacoes', etapaEditando.observacoes ?? '')
+      set('link_mapa', etapaEditando.link_mapa ?? '')
     } else {
       f.reset()
     }
@@ -86,6 +88,15 @@ export function FormEtapa({ salvarEtapa, etapaEditando, onSalvo, onCancelar }: P
           <option value="realizada">Realizada</option>
           <option value="cancelada">Cancelada</option>
         </select>
+      </div>
+
+      <div>
+        <label className={label}>Link do mapa (Google Maps)</label>
+        <input name="link_mapa" type="url" className={input} placeholder="https://maps.app.goo.gl/..." />
+        <p className="text-white/30 text-[11px] mt-1">
+          No Google Maps, procure o kartódromo, toque em Compartilhar e cole o link aqui. Vira o
+          botão “Como chegar” na página da etapa.
+        </p>
       </div>
 
       <div>
