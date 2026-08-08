@@ -1,16 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
+import { getCampeonatoAdmin } from '@/lib/campeonato'
 import { PontuacaoEditor } from './PontuacaoEditor'
 import { MenuAdmin } from '@/components/MenuAdmin'
+import { BarraTemporadaAdmin } from '@/components/BarraTemporadaAdmin'
 
 export default async function PontuacaoPage() {
   const supabase = await createClient()
 
-  const { data: campeonato } = await supabase
-    .from('campeonatos')
-    .select('id, nome, ano, bonus_melhor_volta')
-    .order('ano', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+  const campeonato = await getCampeonatoAdmin()
 
   let regras: { posicao: number; pontos: number }[] = []
   if (campeonato?.id) {
@@ -39,6 +36,8 @@ export default async function PontuacaoPage() {
       </header>
 
       <MenuAdmin />
+
+      <BarraTemporadaAdmin />
 
       <PontuacaoEditor
         campeonatoId={campeonato?.id ?? ''}

@@ -73,6 +73,47 @@ export default async function EstatisticasPage() {
   const etapasRealizadas = (etapas ?? []).filter((e) => e.status === 'realizada').length
   const maxPontos = linhas[0]?.pontos ?? 0
 
+  const porEtapa = new Map<string, { piloto_id: string; pos: number }[]>()
+  for (const r of oficiais) {
+    const atual = porEtapa.get(r.etapa_id) ?? []
+    atual.push({ piloto_id: r.piloto_id, pos: r.posicao_chegada })
+    porEtapa.set(r.etapa_id, atual)
+  }
+
+  const confrontos = new Map<string, { venceu: number; total: number }>()
+  for (const lista of porEtapa.values()) {
+    for (let i = 0; i < lista.length; i++) {
+      for (let j = i + 1; j < lista.length; j++) {
+        const a = lista[i]
+        const b = lista[j]
+        const ca = confrontos.get(a.piloto_id) ?? { venceu: 0, total: 0 }
+        const cb = confrontos.get(b.piloto_id) ?? { venceu: 0, total: 0 }
+        ca.total += 1
+        cb.total += 1
+        if (a.pos < b.pos) ca.venceu += 1
+        else cb.venceu += 1
+        confrontos.set(a.piloto_id, ca)
+        confrontos.set(b.piloto_id, cb)
+      }
+    }
+  }
+
+  const minimoConfrontos = Math.max(3, Math.floor((linhas.length - 1) * 0.6))
+
+  const ranking = linhas
+    .map((l) => {
+      const c = confrontos.get(l.piloto_id) ?? { venceu: 0, total: 0 }
+      return {
+        piloto_id: l.piloto_id,
+        nome: l.nome,
+        venceu: c.venceu,
+        total: c.total,
+        taxa: c.total ? (c.venceu / c.total) * 100 : 0,
+      }
+    })
+    .filter((x) => x.total >= minimoConfrontos)
+    .sort((a, b) => b.taxa - a.taxa)
+
   const porNome = (a: string, b: string) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' })
 
   const lideres = (chave: (l: Linha) => number) => {
@@ -185,6 +226,44 @@ export default async function EstatisticasPage() {
               </p>
             </div>
           </section>
+
+          {ranking.length > 0 && (
+            <section>
+              <h2 className="font-display uppercase text-sm tracking-wide text-white/50 mb-1">
+                Confrontos diretos
+              </h2>
+              <p className="text-white/30 text-xs mb-3">
+                Em cada corrida, quantas vezes o piloto terminou à frente de cada adversário.
+              </p>
+              <div className="bg-surface border border-border rounded-2xl overflow-hidden">
+                {ranking.map((x, i) => (
+                  <div key={x.piloto_id} className="relative border-b border-border last:border-b-0">
+                    <div
+                      className="absolute inset-y-0 left-0 bg-accent/[0.09]"
+                      style={{ width: `${x.taxa}%` }}
+                    />
+                    <div className="relative flex items-center gap-3 px-4 md:px-6 py-3">
+                      <span className="w-6 text-right font-display font-bold text-white/25 text-sm num-tab shrink-0">
+                        {i + 1}
+                      </span>
+                      <span className="flex-1 min-w-0 font-medium text-white truncate">
+                        {x.nome}
+                      </span>
+                      <span className="text-white/35 text-xs num-tab shrink-0 hidden sm:inline">
+                        {x.venceu} de {x.total}
+                      </span>
+                      <span className="w-16 text-right font-display font-bold text-white text-lg num-tab shrink-0">
+                        {Math.round(x.taxa)}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2 text-white/30 text-xs">
+                Considera apenas pilotos com {minimoConfrontos} confrontos ou mais.
+              </p>
+            </section>
+          )}
 
           <section>
             <h2 className="font-display uppercase text-sm tracking-wide text-white/50 mb-3">

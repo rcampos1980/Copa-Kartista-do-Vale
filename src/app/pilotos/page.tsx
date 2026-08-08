@@ -21,12 +21,12 @@ export default async function PilotosPage() {
         <p className="text-white/50">Nenhum piloto cadastrado ainda.</p>
       )}
 
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <section className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-2.5">
         {pilotos.map((piloto) => (
           <Link
             key={piloto.id}
             href={`/pilotos/${piloto.id}`}
-            className="bg-surface border border-border rounded-2xl p-5 flex items-center gap-4 hover:border-accent/50 transition-colors"
+            className="bg-surface border border-border rounded-xl p-3.5 flex items-center gap-3 hover:border-accent/50 transition-colors"
           >
             <div className="relative shrink-0">
               {piloto.foto_url ? (
@@ -34,23 +34,23 @@ export default async function PilotosPage() {
                 <img
                   src={piloto.foto_url}
                   alt={piloto.nome}
-                  className="w-16 h-16 rounded-full object-cover border border-border"
+                  className="w-12 h-12 rounded-full object-cover border border-border"
                 />
               ) : (
-                <div className="w-16 h-16 rounded-full bg-bg border border-border flex items-center justify-center">
-                  <User className="text-white/30" size={28} />
+                <div className="w-12 h-12 rounded-full bg-bg border border-border flex items-center justify-center">
+                  <User className="text-white/30" size={22} />
                 </div>
               )}
             </div>
             <div className="min-w-0">
-              <p className="font-display font-semibold text-white text-lg leading-tight truncate">
+              <p className="font-display font-semibold text-white text-base leading-tight truncate">
                 {piloto.nome}
               </p>
-              <p className="text-white/50 text-sm truncate">
-                {piloto.cidade ?? 'Cidade não informada'}
-              </p>
-              <div className="mt-1.5">
+              <div className="mt-1 flex items-center gap-2 min-w-0">
                 <BadgeTipo tipo={piloto.tipo} />
+                <span className="text-white/40 text-xs truncate">
+                  {piloto.cidade ?? 'Sem cidade'}
+                </span>
               </div>
             </div>
           </Link>

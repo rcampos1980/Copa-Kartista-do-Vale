@@ -1,18 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
+import { getCampeonatoAdmin } from '@/lib/campeonato'
 import { salvarEtapa } from './actions'
 import { GestaoEtapas } from './GestaoEtapas'
 import { MenuAdmin } from '@/components/MenuAdmin'
+import { BarraTemporadaAdmin } from '@/components/BarraTemporadaAdmin'
 
-const ANO_ATUAL = 2026
 
 export default async function AdminEtapasPage() {
   const supabase = await createClient()
 
-  const { data: campeonato } = await supabase
-    .from('campeonatos')
-    .select('id')
-    .eq('ano', ANO_ATUAL)
-    .maybeSingle()
+  const campeonato = await getCampeonatoAdmin()
 
   const { data: etapas } = await supabase
     .from('etapas')
@@ -32,6 +29,8 @@ export default async function AdminEtapasPage() {
       </header>
 
       <MenuAdmin />
+
+      <BarraTemporadaAdmin />
 
       <GestaoEtapas etapas={etapas ?? []} salvarEtapa={salvarEtapa} />
     </main>

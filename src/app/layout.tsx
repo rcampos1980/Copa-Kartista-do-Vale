@@ -17,6 +17,14 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  appleWebApp: {
+    capable: true,
+    title: 'Copa Kartista',
+    statusBarStyle: 'black-translucent',
+  },
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  ),
   title: "Copa Kartista do Vale",
   description: "Campeonato de kart entre amigos",
 };

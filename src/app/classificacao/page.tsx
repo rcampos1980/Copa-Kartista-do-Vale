@@ -47,21 +47,21 @@ export default async function ClassificacaoPage() {
                 key={piloto.piloto_id}
                 className={`bg-surface border rounded-2xl px-2 md:px-6 flex flex-col items-center justify-center text-center ${
                   primeiro
-                    ? 'border-gold/40 py-6 min-h-[220px] md:min-h-0 md:py-6 md:pb-10'
-                    : 'border-border py-4 min-h-[164px] md:min-h-0 md:py-6'
+                    ? 'border-gold/40 py-6 min-h-[220px] md:min-h-0 md:py-5 md:pb-7'
+                    : 'border-border py-4 min-h-[164px] md:min-h-0 md:py-4'
                 }`}
               >
-                <Medal className={coresMedalha[idx]} size={primeiro ? 40 : 30} />
-                <p className="mt-2 font-display text-2xl md:text-3xl font-bold text-white">
+                <Medal className={coresMedalha[idx]} size={primeiro ? 30 : 24} />
+                <p className="mt-1.5 font-display text-2xl md:text-3xl font-bold text-white">
                   {idx + 1}º
                 </p>
                 <p className="mt-0.5 font-display font-semibold text-white text-sm md:text-lg leading-tight">
                   {piloto.nome}
                 </p>
-                <p className="mt-2 text-accent font-display text-xl md:text-3xl font-bold leading-none">
+                <p className="mt-1.5 text-accent font-display text-xl md:text-3xl font-bold leading-none">
                   {piloto.pontos_totais}
                 </p>
-                <p className="mt-1 text-white/40 text-[10px] md:text-xs uppercase tracking-wide">
+                <p className="mt-0.5 text-white/30 text-[10px] uppercase tracking-wide">
                   pontos
                 </p>
               </div>

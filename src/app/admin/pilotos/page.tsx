@@ -1,18 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
+import { getCampeonatoAdmin } from '@/lib/campeonato'
 import { salvarPiloto, alternarAtivo, reenviarAcesso } from './actions'
 import { GestaoPilotos } from './GestaoPilotos'
 import { MenuAdmin } from '@/components/MenuAdmin'
+import { BarraTemporadaAdmin } from '@/components/BarraTemporadaAdmin'
 
-const ANO_ATUAL = 2026
 
 export default async function AdminPilotosPage() {
   const supabase = await createClient()
 
-  const { data: campeonato } = await supabase
-    .from('campeonatos')
-    .select('id')
-    .eq('ano', ANO_ATUAL)
-    .maybeSingle()
+  const campeonato = await getCampeonatoAdmin()
 
   const { data: pilotos } = await supabase
     .from('pilotos')
@@ -51,6 +48,8 @@ export default async function AdminPilotosPage() {
       </header>
 
       <MenuAdmin />
+
+      <BarraTemporadaAdmin />
 
       <GestaoPilotos
         pilotos={pilotosCompletos}

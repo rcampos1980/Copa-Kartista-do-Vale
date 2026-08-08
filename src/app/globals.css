@@ -38,3 +38,30 @@ body {
     color: black !important;
   }
 }
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+main {
+  animation: surgir 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main {
+    animation: none;
+  }
+}
+
+@media print {
+  main {
+    animation: none;
+  }
+}

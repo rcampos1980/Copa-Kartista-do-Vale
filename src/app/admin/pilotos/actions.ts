@@ -1,11 +1,11 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getCampeonatoAdmin } from '@/lib/campeonato'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 
-const ANO_ATUAL = 2026
 
 async function enderecoDoSite(): Promise<string> {
   const fixo = process.env.NEXT_PUBLIC_SITE_URL
@@ -66,11 +66,7 @@ export async function salvarPiloto(formData: FormData) {
     }
   }
 
-  const { data: campeonato } = await supabase
-    .from('campeonatos')
-    .select('id')
-    .eq('ano', ANO_ATUAL)
-    .maybeSingle()
+  const campeonato = await getCampeonatoAdmin()
 
   let pilotoId: string | null = id
 

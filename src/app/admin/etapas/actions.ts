@@ -1,18 +1,14 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getCampeonatoAdmin } from '@/lib/campeonato'
 import { revalidatePath } from 'next/cache'
 
-const ANO_ATUAL = 2026
 
 export async function salvarEtapa(formData: FormData) {
   const supabase = await createClient()
 
-  const { data: campeonato } = await supabase
-    .from('campeonatos')
-    .select('id')
-    .eq('ano', ANO_ATUAL)
-    .maybeSingle()
+  const campeonato = await getCampeonatoAdmin()
 
   if (!campeonato) return
 
