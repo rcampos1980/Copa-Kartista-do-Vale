@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Share2, CalendarPlus, Check } from 'lucide-react'
+import { Share2, CalendarPlus, Check, Weight } from 'lucide-react'
 
 export function AcoesEtapa({
   etapaId,
@@ -55,6 +55,11 @@ export function AcoesEtapa({
           Adicionar ao calendário
         </a>
       )}
+
+      <a href={`/etapas/${etapaId}/pista`} className={botao}>
+        <Weight size={15} />
+        Modo pista
+      </a>
     </div>
   )
 }

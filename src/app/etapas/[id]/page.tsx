@@ -4,6 +4,9 @@ import { formatarData } from '@/lib/format'
 import { PainelLastro } from './PainelLastro'
 import { Galeria } from './Galeria'
 import { AcoesEtapa } from './AcoesEtapa'
+import { FormPalpite } from './FormPalpite'
+import { Palpites } from './Palpites'
+import { salvarPalpite } from './palpiteActions'
 import { recalcularLastro, ajustarLastro } from './actions'
 import { ArrowLeft, Calendar, MapPin, Play, Trophy, Zap, Users, TrendingUp, TrendingDown } from 'lucide-react'
 import Link from 'next/link'
@@ -85,8 +88,37 @@ export default async function EtapaDetalhePage({
   const maiorAvanco = variacoes[0]
   const maiorQueda = variacoes[variacoes.length - 1]
 
+  const hojeStr = new Date().toISOString().split('T')[0]
+  const aindaVaiAcontecer = String(etapa.data).split('T')[0] > hojeStr
+  const podeParpitar = Boolean(dadosUser?.user) && aindaVaiAcontecer
+
+  const { data: pilotosPalpite } = podeParpitar
+    ? await supabase
+        .from('vw_pilotos_publico')
+        .select('id, nome')
+        .eq('ativo', true)
+        .order('nome', { ascending: true })
+    : { data: [] }
+
+  const { data: meuPalpite } = podeParpitar
+    ? await supabase
+        .from('palpites')
+        .select('primeiro, segundo, terceiro')
+        .eq('etapa_id', id)
+        .eq('usuario_id', dadosUser!.user!.id)
+        .maybeSingle()
+    : { data: null }
+
   const podio = resultados.filter((r) => r.posicao_chegada <= 3).slice(0, 3)
   const ordemPodio = [1, 0, 2]
+
+  const { data: palpitesRevelados } = resultados.length > 0
+    ? await supabase.from('vw_palpites_publico').select('*').eq('etapa_id', id)
+    : { data: [] }
+
+  const idsPodio = [1, 2, 3]
+    .map((pos) => resultados.find((r) => r.posicao_chegada === pos)?.piloto_id ?? '')
+    .filter(Boolean)
   const voltaRapida = resultados.find((r) => r.melhor_volta_flag)
   const convidados = resultados.filter((r) => r.is_convidado).length
   const pontosDistribuidos = resultados
@@ -132,6 +164,15 @@ export default async function EtapaDetalhePage({
       </header>
 
       <AcoesEtapa etapaId={id} titulo={`${etapa.pista}`} jaAconteceu={resultados.length > 0} />
+
+      {podeParpitar && (
+        <FormPalpite
+          etapaId={id}
+          pilotos={pilotosPalpite ?? []}
+          palpiteAtual={meuPalpite ?? null}
+          salvarPalpite={salvarPalpite}
+        />
+      )}
 
       {podio.length > 0 && (
         <section className="mb-6 print:hidden">
@@ -311,6 +352,10 @@ export default async function EtapaDetalhePage({
             })}
           </div>
         </div>
+      )}
+
+      {idsPodio.length === 3 && (
+        <Palpites palpites={palpitesRevelados ?? []} podio={idsPodio} />
       )}
 
       <Galeria fotos={fotos} />

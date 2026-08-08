@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getAnoSelecionado } from '@/lib/temporada'
-import { Trophy, Medal, Zap, Target, Flag, TrendingUp } from 'lucide-react'
+import { Trophy, Medal, Zap, Target, Flag, TrendingUp, Dices } from 'lucide-react'
 
 type Linha = {
   piloto_id: string
@@ -97,6 +97,44 @@ export default async function EstatisticasPage() {
       }
     }
   }
+
+  const { data: palpites } = idsEtapas.length
+    ? await supabase.from('vw_palpites_publico').select('*').in('etapa_id', idsEtapas)
+    : { data: [] }
+
+  const podioPorEtapa = new Map<string, string[]>()
+  for (const [etapaId, lista] of porEtapa.entries()) {
+    const ordenado = [...lista].sort((a, b) => a.pos - b.pos)
+    podioPorEtapa.set(etapaId, ordenado.slice(0, 3).map((x) => x.piloto_id))
+  }
+
+  const bolao = new Map<string, { apelido: string; pontos: number; exatos: number; palpites: number }>()
+  for (const pa of palpites ?? []) {
+    const podio = podioPorEtapa.get(pa.etapa_id)
+    if (!podio || podio.length < 3) continue
+    const escolhas = [pa.primeiro, pa.segundo, pa.terceiro]
+    let ganhos = 0
+    let exatos = 0
+    escolhas.forEach((idp, i) => {
+      if (podio[i] === idp) {
+        ganhos += 5
+        exatos += 1
+      } else if (podio.includes(idp)) {
+        ganhos += 2
+      }
+    })
+    const atual = bolao.get(pa.usuario_id) ?? { apelido: pa.apelido, pontos: 0, exatos: 0, palpites: 0 }
+    atual.pontos += ganhos
+    atual.exatos += exatos
+    atual.palpites += 1
+    bolao.set(pa.usuario_id, atual)
+  }
+
+  const rankingBolao = [...bolao.entries()]
+    .map(([id, v]) => ({ id, ...v }))
+    .sort((a, b) => b.pontos - a.pontos || b.exatos - a.exatos)
+
+  const maxBolao = rankingBolao[0]?.pontos ?? 0
 
   const minimoConfrontos = Math.max(3, Math.floor((linhas.length - 1) * 0.6))
 
@@ -226,6 +264,44 @@ export default async function EstatisticasPage() {
               </p>
             </div>
           </section>
+
+          {rankingBolao.length > 0 && (
+            <section>
+              <div className="flex items-center gap-2 mb-1">
+                <Dices className="text-accent" size={16} />
+                <h2 className="font-display uppercase text-sm tracking-wide text-white/50">
+                  Bolão do pódio
+                </h2>
+              </div>
+              <p className="text-white/30 text-xs mb-3">
+                5 pontos por posição exata, 2 por acertar o piloto em outra posição do pódio.
+              </p>
+              <div className="bg-surface border border-border rounded-2xl overflow-hidden">
+                {rankingBolao.map((b, i) => (
+                  <div key={b.id} className="relative border-b border-border last:border-b-0">
+                    <div
+                      className="absolute inset-y-0 left-0 bg-accent/[0.09]"
+                      style={{ width: maxBolao ? `${(b.pontos / maxBolao) * 100}%` : '0%' }}
+                    />
+                    <div className="relative flex items-center gap-3 px-4 md:px-6 py-3">
+                      <span className="w-6 text-right font-display font-bold text-white/25 text-sm num-tab shrink-0">
+                        {i + 1}
+                      </span>
+                      <span className="flex-1 min-w-0 font-medium text-white truncate">
+                        {b.apelido}
+                      </span>
+                      <span className="text-white/35 text-xs num-tab shrink-0 hidden sm:inline">
+                        {b.exatos} {b.exatos === 1 ? 'cravada' : 'cravadas'} · {b.palpites} {b.palpites === 1 ? 'palpite' : 'palpites'}
+                      </span>
+                      <span className="w-14 text-right font-display font-bold text-white text-lg num-tab shrink-0">
+                        {b.pontos}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {ranking.length > 0 && (
             <section>
