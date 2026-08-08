@@ -122,7 +122,6 @@ export default async function Home() {
   const lider = top3[0] ?? null
 
   const dias = proximaEtapa ? diasAte(proximaEtapa.data) : null
-  const perto = dias != null && dias >= 0 && dias <= 15
   const hoje = dias === 0
 
   const proximaCompleta = proximaEtapa
@@ -173,68 +172,80 @@ export default async function Home() {
       </header>
 
       {proximaEtapa && (
-        <section className="mb-6 rounded-2xl border border-accent/30 bg-surface overflow-hidden">
-          {capaProxima && (
-            <div className="relative h-32 md:h-44 w-full">
+        <section className="relative mb-7 overflow-hidden rounded-2xl border border-accent/25 bg-surface">
+          {/* Fundo: a foto da pista quando existe, senao a bandeira quadriculada.
+              Nos dois casos bem apagado, so para dar textura ao canto direito. */}
+          {capaProxima ? (
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-3/5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={capaProxima} alt={proximaEtapa.pista} className="h-full w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent" />
+              <img src={capaProxima} alt="" className="h-full w-full object-cover opacity-25" />
+              <div className="absolute inset-0 bg-gradient-to-r from-surface via-surface/85 to-surface/50" />
             </div>
+          ) : (
+            <div
+              className="pointer-events-none absolute inset-y-0 right-0 w-2/5 opacity-[0.05]"
+              style={{
+                backgroundImage:
+                  'repeating-conic-gradient(#fff 0% 25%, transparent 0% 50%)',
+                backgroundSize: '20px 20px',
+                maskImage: 'linear-gradient(to left, black, transparent)',
+                WebkitMaskImage: 'linear-gradient(to left, black, transparent)',
+              }}
+            />
           )}
 
-          <div className={`flex flex-col gap-4 p-5 md:p-6 ${capaProxima ? '-mt-10 relative' : ''}`}>
-            <div className="flex items-center gap-2">
-              <Calendar className="text-accent" size={14} />
-              <span className="text-[10px] uppercase tracking-widest text-accent">Próxima etapa</span>
-            </div>
+          <div className="relative p-5 md:p-6">
+            <div className="flex items-start gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-accent/40 bg-accent/15">
+                <Calendar className="text-accent" size={20} />
+              </span>
 
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div className="min-w-0">
-                <p className="font-display font-bold text-2xl md:text-4xl leading-tight">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-accent">Próxima etapa</p>
+                <p className="mt-0.5 font-display font-bold text-2xl md:text-3xl leading-tight truncate">
                   {proximaEtapa.pista}
                 </p>
-                <p className="text-white/50 text-sm mt-1">
+                <p className="mt-0.5 text-white/45 text-sm">
                   {proximaEtapa.nome ? `${proximaEtapa.nome} · ` : ''}
                   {formatarData(proximaEtapa.data)}
                   {proximaEtapa.horario ? ` · ${String(proximaEtapa.horario).slice(0, 5)}` : ''}
                 </p>
-                {perto && !hoje && (
-                  <p className="text-white/35 text-xs mt-0.5 capitalize">
-                    {diaDaSemana(proximaEtapa.data)}
-                  </p>
-                )}
               </div>
-
-              {dias != null && dias >= 0 && (
-                <div className="shrink-0 text-right">
-                  {hoje ? (
-                    <span className="font-display font-bold text-accent text-4xl md:text-6xl leading-none">
-                      HOJE
-                    </span>
-                  ) : (
-                    <>
-                      <span
-                        className={`block font-display font-bold text-accent leading-none num-tab ${
-                          perto ? 'text-6xl md:text-8xl' : 'text-4xl md:text-5xl'
-                        }`}
-                      >
-                        {dias}
-                      </span>
-                      <span className="text-white/40 text-[10px] uppercase tracking-widest">
-                        {dias === 1 ? 'dia para a corrida' : 'dias para a corrida'}
-                      </span>
-                    </>
-                  )}
-                </div>
-              )}
             </div>
 
+            {dias != null && dias >= 0 && (
+              <div className="mt-4 text-center">
+                {hoje ? (
+                  <span className="font-display font-bold text-accent text-5xl md:text-6xl leading-none">
+                    HOJE
+                  </span>
+                ) : (
+                  <span className="block font-display font-bold text-accent text-5xl md:text-6xl leading-none num-tab">
+                    {dias}
+                  </span>
+                )}
+                <p className="mt-1.5 text-white/40 text-[10px] uppercase tracking-[0.25em]">
+                  {hoje
+                    ? diaDaSemana(proximaEtapa.data)
+                    : dias === 1
+                      ? 'dia para a corrida'
+                      : 'dias para a corrida'}
+                </p>
+              </div>
+            )}
+
             {proximaCompleta?.link_mapa && (
-              <a href={proximaCompleta.link_mapa} target="_blank" rel="noopener noreferrer" className="inline-flex w-fit items-center gap-2 rounded-xl border border-border bg-bg px-3 py-2 text-sm text-white/70 hover:border-accent/50 hover:text-white transition-colors">
-                <Navigation size={15} /> Como chegar
-              </a>
+              <div className="mt-4 flex justify-center">
+                <a href={proximaCompleta.link_mapa} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-border bg-bg px-3 py-2 text-sm text-white/70 hover:border-accent/50 hover:text-white transition-colors">
+                  <Navigation size={15} /> Como chegar
+                </a>
+              </div>
             )}
           </div>
+
+          {/* fio de luz vermelho na base, como no desenho */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-accent to-transparent" />
+          <div className="pointer-events-none absolute inset-x-8 -bottom-8 h-10 rounded-full bg-accent/25 blur-2xl" />
         </section>
       )}
 
