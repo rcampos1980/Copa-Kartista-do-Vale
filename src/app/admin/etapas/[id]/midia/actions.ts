@@ -71,7 +71,24 @@ export async function enviarFotos(formData: FormData) {
 
 export async function excluirMidia(id: string) {
   const supabase = await createClient()
+
+  const { data: item } = await supabase
+    .from('midia_etapa')
+    .select('url, tipo')
+    .eq('id', id)
+    .maybeSingle()
+
   const { error } = await supabase.from('midia_etapa').delete().eq('id', id)
   if (error) throw new Error(`Falha ao excluir: ${error.message}`)
+
+  if (item?.tipo === 'foto' && item.url) {
+    const marca = '/fotos-etapas/'
+    const pos = item.url.indexOf(marca)
+    if (pos !== -1) {
+      const caminho = decodeURIComponent(item.url.slice(pos + marca.length).split('?')[0])
+      await supabase.storage.from('fotos-etapas').remove([caminho])
+    }
+  }
+
   revalidatePath('/', 'layout')
 }
