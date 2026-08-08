@@ -77,6 +77,7 @@ export default async function EtapasPage() {
                   </div>
                   <p className="text-white/40 text-xs truncate mt-0.5">
                     {etapa.pista} · {formatarData(etapa.data)}
+                    {etapa.horario ? ` · ${String(etapa.horario).slice(0, 5)}` : ''}
                   </p>
                 </div>
 

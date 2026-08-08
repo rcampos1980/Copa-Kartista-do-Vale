@@ -18,6 +18,7 @@ export async function salvarEtapa(formData: FormData) {
     nome: (formData.get('nome') as string) || null,
     pista: formData.get('pista') as string,
     data: formData.get('data') as string,
+    horario: (formData.get('horario') as string) || null,
     status: (formData.get('status') as string) || 'agendada',
     observacoes: (formData.get('observacoes') as string) || null,
   }

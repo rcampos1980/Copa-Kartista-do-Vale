@@ -22,7 +22,7 @@ const itens = [
   { href: '/pilotos', label: 'Pilotos', icon: Users },
   { href: '/etapas', label: 'Etapas', icon: Flag },
   { href: '/regulamento', label: 'Regras', icon: BookOpen },
-  { href: '/estatisticas', label: 'Stats', icon: BarChart3 },
+  { href: '/estatisticas', label: 'Estatísticas', icon: BarChart3 },
 ]
 
 export function Navegacao({ isAdmin }: { isAdmin: boolean }) {
@@ -105,7 +105,7 @@ export function Navegacao({ isAdmin }: { isAdmin: boolean }) {
       </aside>
 
       {/* Bottom nav — mobile */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t border-border bg-surface print:hidden">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex overflow-x-auto border-t border-border bg-surface/95 backdrop-blur-xl print:hidden pb-[env(safe-area-inset-bottom)]">
         {itens.map((item) => {
           const ativo = ehAtivo(item.href)
           const Icon = item.icon

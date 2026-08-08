@@ -10,6 +10,7 @@ type Etapa = {
   nome: string | null
   pista: string
   data: string
+  horario?: string | null
   status: string
   observacoes?: string | null
 }

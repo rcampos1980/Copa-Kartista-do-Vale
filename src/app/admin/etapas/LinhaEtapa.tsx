@@ -8,6 +8,7 @@ type Etapa = {
   nome: string | null
   pista: string
   data: string
+  horario?: string | null
   status: string
   observacoes?: string | null
 }
@@ -51,6 +52,7 @@ export function LinhaEtapa({
         </p>
         <p className="text-white/40 text-xs truncate">
           {etapa.pista} · {formatarData(etapa.data)}
+          {etapa.horario ? ` · ${String(etapa.horario).slice(0, 5)}` : ''}
         </p>
       </div>
 

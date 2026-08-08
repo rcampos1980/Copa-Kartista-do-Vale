@@ -87,6 +87,7 @@ export default async function Home() {
                 <p className="text-white/50 text-sm">
                   {proximaEtapa.nome ? `${proximaEtapa.nome} · ` : ''}
                   {formatarData(proximaEtapa.data)}
+                  {proximaEtapa.horario ? ` · ${String(proximaEtapa.horario).slice(0, 5)}` : ''}
                 </p>
               </div>
             </div>

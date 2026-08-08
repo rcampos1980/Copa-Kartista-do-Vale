@@ -54,7 +54,7 @@ export default async function RootLayout({
       <body className="font-sans antialiased">
         <Rastreador />
         <Navegacao isAdmin={isAdmin} />
-        <div className="md:pl-56 pb-20 md:pb-0">{children}</div>
+        <div className="md:pl-56 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0">{children}</div>
       </body>
     </html>
   );

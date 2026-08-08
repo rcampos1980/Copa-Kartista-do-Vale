@@ -7,6 +7,7 @@ type EtapaEditando = {
   nome: string | null
   pista: string
   data: string
+  horario?: string | null
   status: string
   observacoes?: string | null
 } | null
@@ -23,16 +24,22 @@ export function FormEtapa({ salvarEtapa, etapaEditando, onSalvo, onCancelar }: P
   const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
-    if (etapaEditando && formRef.current) {
-      const f = formRef.current
-      ;(f.elements.namedItem('nome') as HTMLInputElement).value = etapaEditando.nome ?? ''
-      ;(f.elements.namedItem('pista') as HTMLInputElement).value = etapaEditando.pista ?? ''
-      ;(f.elements.namedItem('data') as HTMLInputElement).value = String(etapaEditando.data).split('T')[0]
-      ;(f.elements.namedItem('status') as HTMLSelectElement).value = etapaEditando.status ?? 'agendada'
-      ;(f.elements.namedItem('observacoes') as HTMLTextAreaElement).value =
-        etapaEditando.observacoes ?? ''
-    } else if (!etapaEditando && formRef.current) {
-      formRef.current.reset()
+    const f = formRef.current
+    if (!f) return
+
+    if (etapaEditando) {
+      const set = (nome: string, valor: string) => {
+        const el = f.elements.namedItem(nome) as HTMLInputElement | null
+        if (el) el.value = valor
+      }
+      set('nome', etapaEditando.nome ?? '')
+      set('pista', etapaEditando.pista ?? '')
+      set('data', String(etapaEditando.data).split('T')[0])
+      set('horario', etapaEditando.horario ? String(etapaEditando.horario).slice(0, 5) : '')
+      set('status', etapaEditando.status ?? 'agendada')
+      set('observacoes', etapaEditando.observacoes ?? '')
+    } else {
+      f.reset()
     }
   }, [etapaEditando])
 
@@ -67,13 +74,18 @@ export function FormEtapa({ salvarEtapa, etapaEditando, onSalvo, onCancelar }: P
           <input name="data" type="date" required className={input} />
         </div>
         <div>
-          <label className={label}>Status</label>
-          <select name="status" className={input} defaultValue="agendada">
-            <option value="agendada">Agendada</option>
-            <option value="realizada">Realizada</option>
-            <option value="cancelada">Cancelada</option>
-          </select>
+          <label className={label}>Horário</label>
+          <input name="horario" type="time" className={input} />
         </div>
+      </div>
+
+      <div>
+        <label className={label}>Status</label>
+        <select name="status" className={input} defaultValue="agendada">
+          <option value="agendada">Agendada</option>
+          <option value="realizada">Realizada</option>
+          <option value="cancelada">Cancelada</option>
+        </select>
       </div>
 
       <div>
