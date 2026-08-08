@@ -136,24 +136,24 @@ export default async function Home() {
 
   const estiloPodio = [
     {
-      borda: 'border-gold/60',
+      borda: 'border-gold/70',
       texto: 'text-gold',
-      anel: 'ring-gold/60',
-      selo: 'border-gold/50 text-gold bg-gold/10',
-      brilho: 'shadow-[0_0_45px_-12px_rgba(255,184,0,0.55)]',
+      anel: 'ring-gold/70',
+      selo: 'bg-gold text-bg shadow-[0_0_22px_rgba(255,184,0,0.55)]',
+      brilho: 'shadow-[0_0_55px_-12px_rgba(255,184,0,0.45)]',
     },
     {
-      borda: 'border-silver/30',
+      borda: 'border-white/10',
       texto: 'text-silver',
-      anel: 'ring-silver/40',
-      selo: 'border-silver/40 text-silver bg-silver/10',
+      anel: 'ring-silver/70',
+      selo: 'bg-silver text-bg shadow-[0_0_20px_rgba(200,204,212,0.35)]',
       brilho: '',
     },
     {
-      borda: 'border-bronze/30',
+      borda: 'border-white/10',
       texto: 'text-bronze',
-      anel: 'ring-bronze/40',
-      selo: 'border-bronze/40 text-bronze bg-bronze/10',
+      anel: 'ring-bronze/70',
+      selo: 'bg-bronze text-bg shadow-[0_0_20px_rgba(205,127,50,0.4)]',
       brilho: '',
     },
   ]
@@ -287,7 +287,8 @@ export default async function Home() {
         {top3.length === 0 ? (
           <p className="text-white/40 text-sm">Sem resultados registrados ainda.</p>
         ) : (
-          <div className="grid grid-cols-3 gap-2 md:gap-4 items-end">
+          <div className="relative pt-5">
+            <div className="grid grid-cols-3 gap-2 md:gap-4 items-end">
             {[1, 0, 2].map((idx) => {
               const p = top3[idx]
               if (!p) return <div key={idx} />
@@ -295,18 +296,20 @@ export default async function Home() {
               const primeiro = idx === 0
               const foto = fotoPorPiloto.get(p.piloto_id) ?? null
               const tamanhoFoto = primeiro
-                ? 'h-20 w-20 md:h-28 md:w-28'
-                : 'h-14 w-14 md:h-20 md:w-20'
+                ? 'h-[4.75rem] w-[4.75rem] md:h-32 md:w-32'
+                : 'h-[3.25rem] w-[3.25rem] md:h-24 md:w-24'
               return (
-                <div key={p.piloto_id} className={primeiro ? 'relative z-10' : ''}>
+                <div key={p.piloto_id} className={`flex flex-col ${primeiro ? 'relative z-10' : ''}`}>
                   <Link
                     href={`/pilotos/${p.piloto_id}`}
-                    className={`relative block rounded-2xl border ${e.borda} ${e.brilho} bg-surface px-2 md:px-4 text-center transition-colors hover:border-accent/50 ${
-                      primeiro ? 'py-6 md:py-8' : 'py-5 md:py-6'
+                    className={`relative block rounded-2xl border ${e.borda} ${e.brilho} bg-surface px-1.5 md:px-4 text-center transition-colors hover:border-accent/60 ${
+                      primeiro ? 'py-7 md:py-10' : 'py-6 md:py-8'
                     }`}
                   >
                     <span
-                      className={`absolute top-2 right-2 flex h-6 w-6 md:h-7 md:w-7 items-center justify-center rounded-full border text-[10px] md:text-xs font-display font-bold ${e.selo}`}
+                      className={`absolute top-2 right-2 md:top-3 md:right-3 flex items-center justify-center rounded-full font-display font-bold leading-none ${e.selo} ${
+                        primeiro ? 'h-7 w-7 md:h-11 md:w-11 text-[11px] md:text-base' : 'h-6 w-6 md:h-9 md:w-9 text-[10px] md:text-sm'
+                      }`}
                     >
                       {idx + 1}º
                     </span>
@@ -326,28 +329,31 @@ export default async function Home() {
                       )}
                     </span>
 
-                    <span className="mt-3 block font-display font-semibold leading-tight text-sm md:text-lg">
+                    <span className={`mt-3 block font-display font-bold leading-tight ${primeiro ? 'text-[13px] md:text-2xl' : 'text-[12px] md:text-xl'}`}>
                       {p.nome}
                     </span>
 
                     <span
                       className={`mt-2 block font-display font-bold leading-none num-tab ${
-                        primeiro ? `${e.texto} text-3xl md:text-5xl` : 'text-white text-2xl md:text-4xl'
+                        primeiro ? `${e.texto} text-4xl md:text-6xl` : 'text-white text-3xl md:text-5xl'
                       }`}
                     >
                       {p.pontos_totais}
                     </span>
-                    <span className="mt-1 block text-white/35 text-[9px] uppercase tracking-widest">
+                    <span className="mt-1.5 block text-white/40 text-[9px] md:text-[11px] uppercase tracking-[0.2em]">
                       pontos
                     </span>
                   </Link>
 
                   {primeiro && (
-                    <div className="mx-auto h-4 w-3/4 rounded-b-2xl border-x border-b border-border bg-surface/70" />
+                    <div className="mx-auto h-9 w-[70%] rounded-t-xl bg-[#161b27] md:h-14" />
                   )}
                 </div>
               )
             })}
+            </div>
+
+            <div className="h-8 rounded-2xl bg-[#12161f] shadow-[0_24px_50px_-16px_rgba(0,0,0,0.9)] md:h-12" />
           </div>
         )}
       </section>
