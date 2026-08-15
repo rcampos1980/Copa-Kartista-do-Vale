@@ -1,3 +1,4 @@
+import { hojeEmSaoPaulo, diaEmSaoPaulo, diasEntre } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 import { MenuAdmin } from '@/components/MenuAdmin'
 import { Eye, Users, Smartphone, Monitor, TrendingUp } from 'lucide-react'
@@ -35,15 +36,13 @@ export default async function AdminVisitasPage() {
 
   const linhas = visitas ?? []
 
-  const hoje = new Date()
-  hoje.setHours(0, 0, 0, 0)
-  const seteDias = new Date(hoje)
-  seteDias.setDate(seteDias.getDate() - 6)
+  // Tudo contado pelo dia em Sao Paulo, nao pelo dia do servidor.
+  const hojeSp = hojeEmSaoPaulo()
 
-  const emOuDepois = (iso: string, limite: Date) => new Date(iso) >= limite
-
-  const totalHoje = linhas.filter((v) => emOuDepois(v.criado_em, hoje)).length
-  const total7 = linhas.filter((v) => emOuDepois(v.criado_em, seteDias)).length
+  const totalHoje = linhas.filter((v) => diaEmSaoPaulo(v.criado_em) === hojeSp).length
+  const total7 = linhas.filter(
+    (v) => diasEntre(diaEmSaoPaulo(v.criado_em), hojeSp) <= 6
+  ).length
   const total30 = linhas.length
   const unicos30 = new Set(linhas.map((v) => v.sessao).filter(Boolean)).size
 
@@ -51,13 +50,13 @@ export default async function AdminVisitasPage() {
   const percCelular = total30 ? Math.round((celular / total30) * 100) : 0
 
   const porDia = new Map<string, number>()
+  const [anoSp, mesSp, diaSp] = hojeSp.split('-').map(Number)
   for (let i = 29; i >= 0; i--) {
-    const d = new Date(hoje)
-    d.setDate(d.getDate() - i)
+    const d = new Date(Date.UTC(anoSp, mesSp - 1, diaSp - i))
     porDia.set(d.toISOString().slice(0, 10), 0)
   }
   for (const v of linhas) {
-    const chave = new Date(v.criado_em).toISOString().slice(0, 10)
+    const chave = diaEmSaoPaulo(v.criado_em)
     if (porDia.has(chave)) porDia.set(chave, (porDia.get(chave) ?? 0) + 1)
   }
   const dias = [...porDia.entries()]

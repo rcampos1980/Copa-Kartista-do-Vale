@@ -2,7 +2,7 @@ import { getDashboardData } from '@/lib/supabase/queries'
 import { getTemporadas, getAnoSelecionado } from '@/lib/temporada'
 import { createClient } from '@/lib/supabase/server'
 import { SeletorTemporada } from '@/components/SeletorTemporada'
-import { formatarData, pluralizar } from '@/lib/format'
+import { formatarData, pluralizar, hojeEmSaoPaulo, diasEntre } from '@/lib/format'
 import Link from 'next/link'
 import { Trophy, Flag, Calendar, Users, Zap, ChevronRight, Clock, Navigation, BookOpen, BarChart3, ArrowUpRight } from 'lucide-react'
 
@@ -16,14 +16,8 @@ type EtapaLista = {
   link_mapa: string | null
 }
 
-const DIA_MS = 86400000
-
 function diasAte(dataIso: string): number {
-  const [ano, mes, dia] = dataIso.split('T')[0].split('-').map(Number)
-  const alvo = new Date(ano, mes - 1, dia)
-  const hoje = new Date()
-  hoje.setHours(0, 0, 0, 0)
-  return Math.round((alvo.getTime() - hoje.getTime()) / DIA_MS)
+  return diasEntre(hojeEmSaoPaulo(), dataIso)
 }
 
 function diaDaSemana(dataIso: string): string {

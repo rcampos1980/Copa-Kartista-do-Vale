@@ -1,6 +1,6 @@
 import { getEtapas } from '@/lib/supabase/queries'
 import { getAnoSelecionado } from '@/lib/temporada'
-import { formatarData } from '@/lib/format'
+import { formatarData, hojeEmSaoPaulo } from '@/lib/format'
 import Link from 'next/link'
 import { Flag, ChevronRight, CalendarX } from 'lucide-react'
 
@@ -14,7 +14,7 @@ export default async function EtapasPage() {
   const anoSelecionado = await getAnoSelecionado()
   const { campeonato, etapas } = await getEtapas(anoSelecionado ?? undefined)
 
-  const hoje = new Date().toISOString().split('T')[0]
+  const hoje = hojeEmSaoPaulo()
   const proxima = etapas.find(
     (e) => e.status === 'agendada' && String(e.data).split('T')[0] >= hoje
   )

@@ -1,3 +1,4 @@
+import { hojeEmSaoPaulo } from '@/lib/format'
 import { getDadosLancamento } from '@/lib/supabase/queries'
 import { createClient } from '@/lib/supabase/server'
 import { salvarResultados } from './actions'
@@ -26,7 +27,7 @@ export default async function LancarResultadoPage({
 
   const temAssociados = idsAssociados.length > 0
 
-  const hojeStr = new Date().toISOString().split('T')[0]
+  const hojeStr = hojeEmSaoPaulo()
   const etapaStr = String(etapa.data).split('T')[0]
   const dataLiberada = etapaStr <= hojeStr
   const podeLancar = temAssociados && dataLiberada
