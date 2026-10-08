@@ -1,24 +1,25 @@
 import { createClient } from './client'
 
-// Resolve o campeonato: se 'ano' vier, filtra por ele; senao, pega o mais recente
+// Resolve o campeonato: se 'ano' vier, filtra por ele; senao, pega o mais recente.
+// Se o banco estiver fora do ar, levanta erro em vez de devolver nulo: ja
+// aconteceu de o Supabase pausar por inatividade e o site dizer "nenhum
+// campeonato encontrado", escondendo que o problema era a conexao.
 async function resolverCampeonato(
   supabase: ReturnType<typeof createClient>,
   ano?: number
 ) {
-  if (ano != null) {
-    const { data } = await supabase
-      .from('campeonatos')
-      .select('id, ano, nome')
-      .eq('ano', ano)
-      .maybeSingle()
-    return data
+  const consulta = supabase.from('campeonatos').select('id, ano, nome')
+
+  const { data, error } =
+    ano != null
+      ? await consulta.eq('ano', ano).maybeSingle()
+      : await consulta.order('ano', { ascending: false }).limit(1).maybeSingle()
+
+  if (error) {
+    console.error('[campeonatos] banco indisponivel:', error.message)
+    throw new Error(`Não consegui falar com o banco de dados: ${error.message}`)
   }
-  const { data } = await supabase
-    .from('campeonatos')
-    .select('id, ano, nome')
-    .order('ano', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+
   return data
 }
 
